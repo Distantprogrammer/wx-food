@@ -13,8 +13,7 @@
       <view class="add" @click="goEdit()">＋ 新增</view>
     </view>
 
-    <view v-if="loading && !list.length" class="empty">加载中...</view>
-    <view v-else-if="!list.length" class="empty">暂无菜谱</view>
+    <view v-if="!loading && !list.length" class="empty">暂无菜谱</view>
     <view v-for="item in list" :key="item.id" class="row">
       <view class="main" @click="goEdit(item.id)">
         <text class="name">{{ item.title }}</text>
@@ -46,15 +45,17 @@ const loading = ref(false)
 const refreshing = ref(false)
 const keyword = ref('')
 
-async function load(reset = false) {
+async function load(reset = false, { silent } = {}) {
   if (loading.value) return
   loading.value = true
   if (reset) {
     page.value = 1
-    list.value = []
   }
   try {
-    const res = await adminRecipeList({ page: page.value, limit: 20, keyword: keyword.value.trim() })
+    const res = await adminRecipeList(
+      { page: page.value, limit: 20, keyword: keyword.value.trim() },
+      { silent: silent ?? (!reset && list.value.length > 0) }
+    )
     if (res.code === 200) {
       const rows = res.data?.list || []
       list.value = reset ? rows : list.value.concat(rows)
@@ -76,12 +77,12 @@ function reload() {
 function loadMore() {
   if (!hasMore.value || loading.value) return
   page.value += 1
-  load()
+  load(false, { silent: true })
 }
 
 async function onRefresh() {
   refreshing.value = true
-  await load(true)
+  await load(true, { silent: true })
   refreshing.value = false
 }
 

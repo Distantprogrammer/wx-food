@@ -48,8 +48,7 @@
           :refresher-triggered="refreshing"
           @refresherrefresh="onRefresh"
         >
-          <view v-if="loading && !list.length" class="empty">加载中...</view>
-          <view v-else-if="!list.length" class="empty">暂无菜谱</view>
+          <view v-if="!loading && !list.length" class="empty">暂无菜谱</view>
           <view class="grid">
             <view v-for="item in list" :key="item.id" class="grid-item" @click="goDetail(item)">
               <view class="mini-card">
@@ -104,7 +103,7 @@ async function resolveCovers(rows) {
 
 async function loadCats() {
   try {
-    const res = await getCategories()
+    const res = await getCategories({ silent: true })
     if (res.code === 200 && res.data?.length) {
       categories.value = [{ slug: '', name: '全部', icon: '🔥' }, ...res.data]
     }
@@ -113,21 +112,23 @@ async function loadCats() {
   }
 }
 
-async function load(reset = false) {
+async function load(reset = false, { silent } = {}) {
   if (loading.value) return
   loading.value = true
   if (reset) {
     page.value = 1
-    list.value = []
     coverMap.value = {}
   }
   try {
-    const res = await getRecipeList({
-      page: page.value,
-      limit: 20,
-      categorySlug: activeSlug.value || undefined,
-      keyword: keyword.value.trim() || undefined
-    })
+    const res = await getRecipeList(
+      {
+        page: page.value,
+        limit: 20,
+        categorySlug: activeSlug.value || undefined,
+        keyword: keyword.value.trim() || undefined
+      },
+      { silent: silent ?? (!reset && list.value.length > 0) }
+    )
     if (res.code === 200) {
       const rows = res.data?.list || []
       list.value = reset ? rows : list.value.concat(rows)
@@ -154,12 +155,12 @@ function reload() {
 function loadMore() {
   if (!hasMore.value || loading.value) return
   page.value += 1
-  load()
+  load(false, { silent: true })
 }
 
 async function onRefresh() {
   refreshing.value = true
-  await load(true)
+  await load(true, { silent: true })
   refreshing.value = false
 }
 

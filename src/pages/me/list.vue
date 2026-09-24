@@ -1,7 +1,6 @@
 ﻿<template>
   <PageLayout :title="title" show-back background-color="#FFF8F0">
-    <view v-if="loading && !list.length" class="empty">加载中...</view>
-    <view v-else-if="!list.length" class="empty">暂无数据</view>
+    <view v-if="!loading && !list.length" class="empty">暂无数据</view>
     <view v-for="item in list" :key="item.id" class="item">
       <RecipeCard :recipe="item" @click="goDetail" />
     </view>
@@ -24,15 +23,19 @@ const page = ref(1)
 const hasMore = ref(false)
 const loading = ref(false)
 
-async function load(reset = false) {
+async function load(reset = false, { silent } = {}) {
   if (loading.value) return
   loading.value = true
   if (reset) {
     page.value = 1
-    list.value = []
   }
   try {
-    const res = await getUserRecipeList(type.value, page.value, 20)
+    const res = await getUserRecipeList(
+      type.value,
+      page.value,
+      20,
+      { silent: silent ?? (!reset && list.value.length > 0) }
+    )
     if (res.code === 200) {
       const rows = res.data?.list || []
       list.value = reset ? rows : list.value.concat(rows)
@@ -48,7 +51,7 @@ async function load(reset = false) {
 function loadMore() {
   if (!hasMore.value) return
   page.value += 1
-  load()
+  load(false, { silent: true })
 }
 
 function goDetail(recipe) {

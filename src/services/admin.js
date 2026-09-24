@@ -1,45 +1,45 @@
 import { request } from './request'
 
-export function adminRecipeList(params = {}) {
-  return request('admin', { action: 'recipeList', ...params })
+export function adminRecipeList(params = {}, options) {
+  return request('admin', { action: 'recipeList', ...params }, options)
 }
 
-export function adminRecipeDetail(recipeId) {
-  return request('admin', { action: 'recipeDetail', recipeId })
+export function adminRecipeDetail(recipeId, options) {
+  return request('admin', { action: 'recipeDetail', recipeId }, options)
 }
 
-export function adminRecipeSave(data) {
-  return request('admin', { action: 'recipeSave', data })
+export function adminRecipeSave(data, options) {
+  return request('admin', { action: 'recipeSave', data }, options)
 }
 
-export function adminRecipeDelete(recipeId) {
-  return request('admin', { action: 'recipeDelete', recipeId })
+export function adminRecipeDelete(recipeId, options) {
+  return request('admin', { action: 'recipeDelete', recipeId }, options)
 }
 
-export function adminTipList(params = {}) {
-  return request('admin', { action: 'tipList', ...params })
+export function adminTipList(params = {}, options) {
+  return request('admin', { action: 'tipList', ...params }, options)
 }
 
-export function adminTipDetail(tipId) {
-  return request('admin', { action: 'tipDetail', tipId })
+export function adminTipDetail(tipId, options) {
+  return request('admin', { action: 'tipDetail', tipId }, options)
 }
 
-export function adminTipSave(data) {
-  return request('admin', { action: 'tipSave', data })
+export function adminTipSave(data, options) {
+  return request('admin', { action: 'tipSave', data }, options)
 }
 
-export function adminTipDelete(tipId) {
-  return request('admin', { action: 'tipDelete', tipId })
+export function adminTipDelete(tipId, options) {
+  return request('admin', { action: 'tipDelete', tipId }, options)
 }
 
-export function adminCategoryList() {
-  return request('admin', { action: 'categoryList' })
+export function adminCategoryList(options) {
+  return request('admin', { action: 'categoryList' }, options)
 }
 
-export function adminCategorySave(data) {
-  return request('admin', { action: 'categorySave', data })
+export function adminCategorySave(data, options) {
+  return request('admin', { action: 'categorySave', data }, options)
 }
 
-export function adminCategoryDelete(slug) {
-  return request('admin', { action: 'categoryDelete', slug })
+export function adminCategoryDelete(slug, options) {
+  return request('admin', { action: 'categoryDelete', slug }, options)
 }

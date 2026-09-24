@@ -20,11 +20,12 @@
       </template>
     </PageHeader>
 
+    <!-- 可滚动：外层 scroll-view -->
     <scroll-view
-      v-if="scrollable"
+      v-if="enableScroll"
       class="page-layout__scroll"
       scroll-y
-      :style="scrollViewStyle"
+      :style="bodyStyle"
       :enable-back-to-top="enableBackToTop"
       :show-scrollbar="showScrollbar"
       :refresher-enabled="refresherEnabled"
@@ -37,12 +38,9 @@
       </view>
     </scroll-view>
 
-    <view
-      v-else
-      class="page-layout__static"
-      :style="staticContentStyle"
-    >
-      <view class="page-layout__content" :style="mergedContentStyle">
+    <!-- 不可滚动：固定高度容器，供内部自行 scroll-view / flex（避免嵌套滚动与 iOS 百分比高度失效） -->
+    <view v-else class="page-layout__body" :style="bodyStyle">
+      <view class="page-layout__content page-layout__content--fill" :style="mergedContentStyle">
         <slot />
       </view>
     </view>
@@ -60,10 +58,11 @@
 </template>
 
 <script setup>
-import { computed, useSlots } from 'vue'
+import { computed, onMounted, ref, useSlots } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import PageHeader from './PageHeader.vue'
 import CustomTabBar from '@/components/custom-tab-bar/CustomTabBar.vue'
-import { getScrollViewStyle, rpx2px } from '@/utils/system'
+import { getScrollViewStyle, getWindowHeight, resetSystemInfo, rpx2px } from '@/utils/system'
 
 const slots = useSlots()
 const hasHeaderLeft = computed(() => !!slots['header-left'])
@@ -100,47 +99,73 @@ const props = defineProps({
   footerHeight: { type: Number, default: 120 },
   enableBackToTop: { type: Boolean, default: true },
   showScrollbar: { type: Boolean, default: false },
-  scrollable: { type: Boolean, default: true },
+  /** 为 false 时外层不用 scroll-view，适合内部自管滚动/底部固定布局 */
+  enableScroll: { type: Boolean, default: true },
+  /** @deprecated 请使用 enableScroll；保留兼容旧写法 */
+  scrollable: { type: Boolean, default: undefined },
   refresherEnabled: { type: Boolean, default: false },
   refresherTriggered: { type: Boolean, default: false }
 })
+
+const enableScroll = computed(() =>
+  props.scrollable === undefined ? props.enableScroll : props.scrollable
+)
 
 const letterHeaderExtra = computed(() => {
   if (!props.showHeader || props.headerTheme !== 'letter') return 0
   return props.subtitle ? 56 : 32
 })
 
+/** 响应式视口高度：避免启动瞬间错误 windowHeight 被写死 */
+const viewportHeight = ref(getWindowHeight())
+
+function refreshViewport() {
+  resetSystemInfo()
+  viewportHeight.value = getWindowHeight()
+}
+
+onMounted(() => {
+  refreshViewport()
+  setTimeout(refreshViewport, 50)
+})
+
+onShow(() => {
+  refreshViewport()
+})
+
 const layoutStyle = computed(() => ({
   background: props.backgroundColor,
-  height: '100vh',
+  height: `${viewportHeight.value}px`,
   overflow: 'hidden'
 }))
 
-const scrollViewStyle = computed(() =>
+const bodyStyle = computed(() =>
   getScrollViewStyle({
     showHeader: props.showHeader,
     showTabBar: props.showTabBar,
-    extraBottomPadding: props.extraBottomPadding,
-    headerContentHeight: letterHeaderExtra.value || props.headerContentHeight,
-    footerHeight: hasFooter.value ? props.footerHeight : 0
+    // 高度已在容器扣除 footer；内容区再用 padding 留白，避免双倍扣减
+    extraBottomPadding: 0,
+    headerContentHeight: letterHeaderExtra.value || (hasHeaderContent.value ? props.headerContentHeight : 0),
+    footerHeight: hasFooter.value ? props.footerHeight : 0,
+    windowHeight: viewportHeight.value
   })
 )
 
-const staticContentStyle = computed(() => ({
-  ...scrollViewStyle.value,
-  overflow: 'hidden'
-}))
-
 const mergedContentStyle = computed(() => {
-  const base = {
+  const style = {
     paddingLeft: `${rpx2px(props.contentPaddingX)}px`,
     paddingRight: `${rpx2px(props.contentPaddingX)}px`,
     ...props.contentStyle
   }
   if (props.extraBottomPadding) {
-    base.paddingBottom = `${rpx2px(props.extraBottomPadding)}px`
+    style.paddingBottom = `${rpx2px(props.extraBottomPadding)}px`
   }
-  return base
+  if (!enableScroll.value) {
+    style.height = '100%'
+    style.boxSizing = 'border-box'
+    style.overflow = 'hidden'
+  }
+  return style
 })
 </script>
 
@@ -150,32 +175,28 @@ const mergedContentStyle = computed(() => {
 .page-layout {
   width: 100%;
   box-sizing: border-box;
+  position: relative;
   color: $ink;
 }
 
-.page-layout__static {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.page-layout__static > .page-layout__content {
-  flex: 1;
-  min-height: 0;
-  height: 100%;
-  overflow: hidden;
-}
-
 .page-layout__scroll,
-.page-layout__static,
+.page-layout__body {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.page-layout__body {
+  overflow: hidden;
+}
+
 .page-layout__content {
   width: 100%;
   box-sizing: border-box;
 }
 
-.page-layout__content {
-  position: relative;
-  z-index: 1;
+.page-layout__content--fill {
+  height: 100%;
+  overflow: hidden;
 }
 
 .page-layout__footer {
@@ -193,7 +214,7 @@ const mergedContentStyle = computed(() => {
   right: 0;
   top: 0;
   bottom: 0;
-  z-index: 1100;
+  z-index: $z-index-popup;
   pointer-events: none;
 }
 </style>

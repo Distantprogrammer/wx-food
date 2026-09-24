@@ -1,8 +1,7 @@
 ﻿<template>
   <PageLayout title="烹饪技巧" show-tab-bar active-tab="tips" background-color="#FFF8F0">
     <view class="tips-page">
-      <view v-if="loading" class="empty">加载中...</view>
-      <view v-else-if="!list.length" class="empty">暂无技巧文章</view>
+      <view v-if="!loading && !list.length" class="empty">暂无技巧文章</view>
       <view
         v-for="item in list"
         :key="item.id"
