@@ -1,0 +1,146 @@
+{
+  "collections": [
+    {
+      "name": "users",
+      "description": "用户表（静默登录自动创建）",
+      "fields": {
+        "_id": "string",
+        "openid": "string",
+        "nickname": "string",
+        "avatar": "string",
+        "role": "number",
+        "createTime": "date",
+        "updateTime": "date"
+      },
+      "indexes": [
+        { "name": "openid_unique", "unique": true, "keys": [{ "name": "openid", "direction": "1" }] }
+      ]
+    },
+    {
+      "name": "categories",
+      "description": "菜谱分类",
+      "fields": {
+        "_id": "string",
+        "slug": "string",
+        "name": "string",
+        "icon": "string",
+        "sort": "number"
+      },
+      "indexes": [
+        { "name": "slug_unique", "unique": true, "keys": [{ "name": "slug", "direction": "1" }] }
+      ]
+    },
+    {
+      "name": "recipes",
+      "description": "菜谱",
+      "fields": {
+        "_id": "string",
+        "recipeId": "number",
+        "title": "string",
+        "categorySlug": "string",
+        "categoryName": "string",
+        "difficulty": "number",
+        "calories": "number",
+        "likes": "number",
+        "favorites": "number",
+        "coverImage": "string",
+        "summary": "string",
+        "ingredients": "array",
+        "steps": "array",
+        "calculation": "string",
+        "calculationItems": "array",
+        "ingredientsHtml": "string",
+        "calculationHtml": "string",
+        "stepsHtml": "string",
+        "notesHtml": "string",
+        "markdownHtml": "string",
+        "images": "array",
+        "lastUpdated": "string",
+        "createTime": "date",
+        "updateTime": "date"
+      },
+      "indexes": [
+        { "name": "recipeId_unique", "unique": true, "keys": [{ "name": "recipeId", "direction": "1" }] },
+        { "name": "categorySlug", "keys": [{ "name": "categorySlug", "direction": "1" }] },
+        { "name": "likes", "keys": [{ "name": "likes", "direction": "-1" }] },
+        { "name": "favorites", "keys": [{ "name": "favorites", "direction": "-1" }] }
+      ]
+    },
+    {
+      "name": "tips",
+      "description": "烹饪技巧",
+      "fields": {
+        "_id": "string",
+        "tipId": "number",
+        "title": "string",
+        "summary": "string",
+        "markdownHtml": "string",
+        "images": "array",
+        "createTime": "date",
+        "updateTime": "date"
+      },
+      "indexes": [
+        { "name": "tipId_unique", "unique": true, "keys": [{ "name": "tipId", "direction": "1" }] }
+      ]
+    },
+    {
+      "name": "likes",
+      "description": "喜欢的菜谱",
+      "fields": {
+        "_id": "string",
+        "userId": "string",
+        "recipeId": "number",
+        "createTime": "date"
+      },
+      "indexes": [
+        { "name": "user_recipe", "unique": true, "keys": [{ "name": "userId", "direction": "1" }, { "name": "recipeId", "direction": "1" }] }
+      ]
+    },
+    {
+      "name": "favorites",
+      "description": "收藏的菜谱",
+      "fields": {
+        "_id": "string",
+        "userId": "string",
+        "recipeId": "number",
+        "createTime": "date"
+      },
+      "indexes": [
+        { "name": "user_recipe", "unique": true, "keys": [{ "name": "userId", "direction": "1" }, { "name": "recipeId", "direction": "1" }] }
+      ]
+    },
+    {
+      "name": "cooked",
+      "description": "做过的菜",
+      "fields": {
+        "_id": "string",
+        "userId": "string",
+        "recipeId": "number",
+        "createTime": "date"
+      },
+      "indexes": [
+        { "name": "user_recipe", "unique": true, "keys": [{ "name": "userId", "direction": "1" }, { "name": "recipeId", "direction": "1" }] }
+      ]
+    },
+    {
+      "name": "history",
+      "description": "浏览历史",
+      "fields": {
+        "_id": "string",
+        "userId": "string",
+        "recipeId": "number",
+        "createTime": "date",
+        "updateTime": "date"
+      },
+      "indexes": [
+        { "name": "user_recipe", "unique": true, "keys": [{ "name": "userId", "direction": "1" }, { "name": "recipeId", "direction": "1" }] },
+        { "name": "user_update", "keys": [{ "name": "userId", "direction": "1" }, { "name": "updateTime", "direction": "-1" }] }
+      ]
+    }
+  ],
+  "role": {
+    "1": "管理员",
+    "2": "普通用户"
+  },
+  "note": "首期不含社交关系/推送。菜谱与技巧通过 seedImport 云函数导入。"
+}

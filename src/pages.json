@@ -1,0 +1,159 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "首页"
+      }
+    },
+    {
+      "path": "pages/tips/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "烹饪技巧"
+      }
+    },
+    {
+      "path": "pages/category/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "分类"
+      }
+    },
+    {
+      "path": "pages/me/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "我的"
+      }
+    },
+    {
+      "path": "pages/me/list",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "我的菜谱"
+      }
+    }
+  ],
+  "subPackages": [
+    {
+      "root": "subPackages/pkg-recipe",
+      "pages": [
+        {
+          "path": "detail/index",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "菜谱详情"
+          }
+        }
+      ]
+    },
+    {
+      "root": "subPackages/pkg-tips",
+      "pages": [
+        {
+          "path": "detail/index",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "技巧详情"
+          }
+        }
+      ]
+    },
+    {
+      "root": "subPackages/pkg-admin",
+      "pages": [
+        {
+          "path": "index/index",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "内容管理"
+          }
+        },
+        {
+          "path": "seed/index",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "导入种子"
+          }
+        },
+        {
+          "path": "recipes/list",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "菜品管理"
+          }
+        },
+        {
+          "path": "recipes/edit",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "编辑菜品"
+          }
+        },
+        {
+          "path": "tips/list",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "技巧管理"
+          }
+        },
+        {
+          "path": "tips/edit",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "编辑技巧"
+          }
+        },
+        {
+          "path": "categories/list",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "分类管理"
+          }
+        }
+      ]
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "今天做什么菜",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#FFF8F0",
+    "app-plus": {
+      "background": "#FFF8F0"
+    }
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#999999",
+    "selectedColor": "#FF6B35",
+    "borderStyle": "black",
+    "backgroundColor": "#FFFFFF",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/tips/index",
+        "text": "烹饪技巧"
+      },
+      {
+        "pagePath": "pages/category/index",
+        "text": "分类"
+      },
+      {
+        "pagePath": "pages/me/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^uni-(.*)": "@/uni_modules/uni-$1/components/uni-$1/uni-$1.vue"
+    }
+  }
+}

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>今天做什么菜 · HTML 设计稿总览</title>
+  <link rel="stylesheet" href="css/tokens.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: #f0ebe3;
+      color: var(--text-primary);
+      line-height: 1.5;
+      padding: 40px 24px 80px;
+    }
+    .wrap { max-width: 1280px; margin: 0 auto; }
+    .hero {
+      margin-bottom: 40px;
+      padding: 32px 28px;
+      background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 60%, #ffb366 100%);
+      border-radius: 20px;
+      color: #fff;
+      box-shadow: 0 12px 40px rgba(255, 107, 53, 0.25);
+    }
+    .hero h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .hero p { font-size: 14px; opacity: 0.92; max-width: 640px; }
+    .hero .meta {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 12px;
+    }
+    .hero .meta span {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    .group { margin-bottom: 48px; }
+    .group h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      padding-left: 12px;
+      border-left: 4px solid var(--primary);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 28px;
+    }
+    .card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { transform: translateY(-4px); }
+    .card:hover .frame { box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18); }
+    .frame {
+      width: 100%;
+      aspect-ratio: 375 / 812;
+      max-height: 420px;
+      background: #1a1a1a;
+      border-radius: 24px;
+      padding: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+    }
+    .frame iframe {
+      width: 375px;
+      height: 812px;
+      border: 0;
+      border-radius: 16px;
+      transform-origin: top left;
+      pointer-events: none;
+      background: #fff8f0;
+    }
+    .card-info {
+      padding: 12px 4px 0;
+    }
+    .card-info .name {
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .card-info .file {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-top: 2px;
+    }
+    footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-light);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <h1>🍳 今天做什么菜 · HTML 设计稿</h1>
+      <p>从 uni-app 小程序样式抽离的静态设计稿，统一 375×812 手机框预览。本地直接打开本文件即可浏览，点击卡片进入完整页面。</p>
+      <div class="meta">
+        <span>主色 #FF6B35</span>
+        <span>背景 #FFF8F0</span>
+        <span>17 个页面</span>
+        <span>无构建依赖</span>
+      </div>
+    </header>
+
+    <section class="group">
+      <h2>启动 / 登录</h2>
+      <div class="grid" id="g-auth"></div>
+    </section>
+
+    <section class="group">
+      <h2>Tab 主流程</h2>
+      <div class="grid" id="g-tab"></div>
+    </section>
+
+    <section class="group">
+      <h2>菜谱 / 技巧</h2>
+      <div class="grid" id="g-recipe"></div>
+    </section>
+
+    <section class="group">
+      <h2>社交关系</h2>
+      <div class="grid" id="g-social"></div>
+    </section>
+
+    <footer>打开路径：design-mockups/index.html · 页面文件位于 pages/</footer>
+  </div>
+
+  <script>
+    const groups = {
+      "g-auth": [
+        { name: "启动页", file: "splash.html" },
+        { name: "登录", file: "login.html" }
+      ],
+      "g-tab": [
+        { name: "首页", file: "home.html" },
+        { name: "烹饪技巧", file: "tips.html" },
+        { name: "分类", file: "category.html" },
+        { name: "我的关系", file: "relation.html" },
+        { name: "我的", file: "mine.html" }
+      ],
+      "g-recipe": [
+        { name: "菜谱详情", file: "recipe-detail.html" },
+        { name: "菜谱列表", file: "recipe-list.html" },
+        { name: "技巧详情", file: "tips-detail.html" }
+      ],
+      "g-social": [
+        { name: "添加关联", file: "invite.html" },
+        { name: "绑定公众号", file: "mp-bind.html" },
+        { name: "绑定 WebView", file: "mp-bind-webview.html" },
+        { name: "推送权限", file: "permissions.html" },
+        { name: "选择好友", file: "push-select.html" },
+        { name: "确认推送", file: "push-confirm.html" },
+        { name: "推送记录", file: "push-list.html" }
+      ]
+    };
+
+    function scaleIframe(frameEl, iframe) {
+      const w = frameEl.clientWidth - 16;
+      const scale = w / 375;
+      iframe.style.transform = `scale(${scale})`;
+      iframe.style.height = "812px";
+    }
+
+    Object.keys(groups).forEach((gid) => {
+      const el = document.getElementById(gid);
+      groups[gid].forEach((item) => {
+        const href = `pages/${item.file}`;
+        const a = document.createElement("a");
+        a.className = "card";
+        a.href = href;
+        a.target = "_blank";
+        a.innerHTML = `
+          <div class="frame"><iframe src="${href}" title="${item.name}" loading="lazy"></iframe></div>
+          <div class="card-info">
+            <div class="name">${item.name}</div>
+            <div class="file">pages/${item.file}</div>
+          </div>`;
+        el.appendChild(a);
+        const frame = a.querySelector(".frame");
+        const iframe = a.querySelector("iframe");
+        const resize = () => scaleIframe(frame, iframe);
+        iframe.addEventListener("load", resize);
+        window.addEventListener("resize", resize);
+        requestAnimationFrame(resize);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "miniprogramRoot": "dist/dev/mp-weixin/",
+  "cloudfunctionRoot": "cloudfunctions/",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "minified": true
+  },
+  "appid": "touristappid",
+  "projectname": "今天做什么菜",
+  "compileType": "miniprogram"
+}
