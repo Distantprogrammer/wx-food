@@ -13,11 +13,11 @@
     <template #header-content>
       <view class="search-wrap">
         <view class="search-bar">
-          <text>🔍</text>
+          <text class="search-icon">🔍</text>
           <input
             v-model="keyword"
             class="search-input"
-            placeholder="搜索菜谱"
+            placeholder="搜索菜谱、食材"
             confirm-type="search"
             @confirm="reload"
           />
@@ -25,8 +25,8 @@
       </view>
     </template>
 
-    <view class="main">
-      <scroll-view scroll-y class="nav">
+    <view class="category-layout">
+      <scroll-view scroll-y class="category-nav">
         <view
           v-for="cat in categories"
           :key="cat.slug"
@@ -39,26 +39,36 @@
         </view>
       </scroll-view>
 
-      <view class="right">
+      <view class="category-right">
+        <view class="filter-bar">
+          <view class="filter-item" :class="{ active: !!difficulty }" @click="openDifficulty">
+            {{ difficultyLabel }} ▼
+          </view>
+          <view class="filter-item" :class="{ active: sort !== 'default' }" @click="openSort">
+            {{ sortLabel }} ▼
+          </view>
+        </view>
+
         <scroll-view
           scroll-y
-          class="list"
+          class="recipe-scroll"
           @scrolltolower="loadMore"
           :refresher-enabled="true"
           :refresher-triggered="refreshing"
           @refresherrefresh="onRefresh"
         >
           <view v-if="!loading && !list.length" class="empty">暂无菜谱</view>
-          <view class="grid">
-            <view v-for="item in list" :key="item.id" class="grid-item" @click="goDetail(item)">
-              <view class="mini-card">
-                <view class="cover">
-                  <image v-if="coverMap[item.id]" :src="coverMap[item.id]" mode="aspectFill" class="cover-img" />
-                  <view v-else class="cover-ph">🍽️</view>
-                </view>
-                <view class="info">
-                  <text class="name">{{ item.title }}</text>
-                  <text class="meta">{{ item.difficultyText }} · {{ item.calories || '--' }}kcal</text>
+          <view class="recipe-grid">
+            <view v-for="item in list" :key="item.id" class="mini-card" @click="goDetail(item)">
+              <view class="cover">
+                <image v-if="coverMap[item.id]" :src="coverMap[item.id]" mode="aspectFill" class="cover-img" />
+                <view v-else class="cover-ph">🍽️</view>
+              </view>
+              <view class="info">
+                <text class="name">{{ item.title }}</text>
+                <view class="meta">
+                  <text>{{ item.difficultyText }}</text>
+                  <text>❤️ {{ item.likes || 0 }}</text>
                 </view>
               </view>
             </view>
@@ -71,7 +81,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import PageLayout from '@/components/page-layout/PageLayout.vue'
 import { useTabPage } from '@/composables/useTabPage'
 import { getCategories, getRecipeList } from '@/services/recipe'
@@ -79,6 +89,21 @@ import { getCoverTempUrlBatch } from '@/utils/index'
 import { showApiError } from '@/utils/apiError'
 
 useTabPage('category')
+
+/** 与云函数 difficulty 映射一致：1=易(≤2) 2=中(3) 3=难(≥4) */
+const difficultyOptions = [
+  { label: '全部难度', value: 0 },
+  { label: '简单', value: 1 },
+  { label: '中等', value: 2 },
+  { label: '困难', value: 3 }
+]
+
+const sortOptions = [
+  { label: '默认排序', value: 'default' },
+  { label: '最热', value: 'likes' },
+  { label: '收藏', value: 'favorites' },
+  { label: '低卡', value: 'calories' }
+]
 
 const categories = ref([{ slug: '', name: '全部', icon: '🔥' }])
 const activeSlug = ref('')
@@ -89,6 +114,18 @@ const loading = ref(false)
 const refreshing = ref(false)
 const keyword = ref('')
 const coverMap = ref({})
+const difficulty = ref(0)
+const sort = ref('default')
+
+const difficultyLabel = computed(() => {
+  const hit = difficultyOptions.find((o) => o.value === difficulty.value)
+  return hit?.value ? hit.label : '难度'
+})
+
+const sortLabel = computed(() => {
+  const hit = sortOptions.find((o) => o.value === sort.value)
+  return hit && hit.value !== 'default' ? hit.label : '排序'
+})
 
 async function resolveCovers(rows) {
   const urls = (rows || []).map((r) => r.coverImage).filter(Boolean)
@@ -125,7 +162,9 @@ async function load(reset = false, { silent } = {}) {
         page: page.value,
         limit: 20,
         categorySlug: activeSlug.value || undefined,
-        keyword: keyword.value.trim() || undefined
+        keyword: keyword.value.trim() || undefined,
+        difficulty: difficulty.value || undefined,
+        sort: sort.value === 'default' ? undefined : sort.value
       },
       { silent: silent ?? (!reset && list.value.length > 0) }
     )
@@ -146,6 +185,30 @@ function switchCat(slug) {
   if (activeSlug.value === slug) return
   activeSlug.value = slug
   load(true)
+}
+
+function openDifficulty() {
+  uni.showActionSheet({
+    itemList: difficultyOptions.map((o) => o.label),
+    success: (res) => {
+      const opt = difficultyOptions[res.tapIndex]
+      if (!opt || difficulty.value === opt.value) return
+      difficulty.value = opt.value
+      load(true)
+    }
+  })
+}
+
+function openSort() {
+  uni.showActionSheet({
+    itemList: sortOptions.map((o) => o.label),
+    success: (res) => {
+      const opt = sortOptions[res.tapIndex]
+      if (!opt || sort.value === opt.value) return
+      sort.value = opt.value
+      load(true)
+    }
+  })
 }
 
 function reload() {
@@ -178,33 +241,38 @@ onMounted(async () => {
 @import '@/styles/variables.scss';
 
 .search-wrap {
-  padding: 12rpx 24rpx 16rpx;
+  padding: 0 24rpx 16rpx;
   background: #fff;
 }
 
 .search-bar {
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  background: #f8f8f8;
+  gap: 16rpx;
+  background: $bg-muted;
   border-radius: 32rpx;
-  padding: 14rpx 24rpx;
+  padding: 16rpx 24rpx;
+}
+
+.search-icon {
+  font-size: 28rpx;
 }
 
 .search-input {
   flex: 1;
   font-size: 26rpx;
+  color: $text-primary;
 }
 
-.main {
+.category-layout {
   display: flex;
   height: 100%;
   min-height: 0;
 }
 
-.nav {
+.category-nav {
   width: 180rpx;
-  background: #f8f8f8;
+  background: $bg-muted;
   height: 100%;
   flex-shrink: 0;
 }
@@ -213,10 +281,10 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24rpx 12rpx;
-  position: relative;
-  font-size: 22rpx;
+  padding: 24rpx 16rpx;
+  font-size: 24rpx;
   color: $text-secondary;
+  position: relative;
 
   &.active {
     background: #fff;
@@ -238,28 +306,59 @@ onMounted(async () => {
 }
 
 .nav-icon {
-  font-size: 32rpx;
-  margin-bottom: 6rpx;
+  font-size: 36rpx;
+  margin-bottom: 8rpx;
 }
 
-.right {
+.nav-name {
+  text-align: center;
+}
+
+.category-right {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
+  background: #fff;
+  height: 100%;
 }
 
-.list {
+.filter-bar {
+  display: flex;
+  flex-shrink: 0;
+  padding: 16rpx 24rpx;
+  background: #fff;
+  border-bottom: 1rpx solid $border-color;
+  gap: 16rpx;
+  overflow-x: auto;
+}
+
+.filter-item {
+  flex-shrink: 0;
+  padding: 12rpx 20rpx;
+  background: $bg-muted;
+  border-radius: 24rpx;
+  font-size: 22rpx;
+  color: $text-secondary;
+
+  &.active {
+    background: rgba(255, 107, 53, 0.12);
+    color: $primary-color;
+    font-weight: 600;
+  }
+}
+
+.recipe-scroll {
   flex: 1;
-  height: 100%;
+  height: 0;
   padding: 16rpx;
   box-sizing: border-box;
 }
 
-.grid {
+.recipe-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16rpx;
+  gap: 24rpx;
 }
 
 .mini-card {
@@ -270,7 +369,8 @@ onMounted(async () => {
 }
 
 .cover {
-  height: 180rpx;
+  height: 200rpx;
+  background: $bg-muted;
 }
 
 .cover-img,
@@ -288,22 +388,24 @@ onMounted(async () => {
 }
 
 .info {
-  padding: 12rpx;
+  padding: 16rpx;
 }
 
 .name {
   display: block;
-  font-size: 26rpx;
+  font-size: 28rpx;
   font-weight: 600;
+  margin-bottom: 8rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .meta {
-  font-size: 20rpx;
+  display: flex;
+  gap: 16rpx;
+  font-size: 22rpx;
   color: $text-light;
-  margin-top: 4rpx;
 }
 
 .empty,

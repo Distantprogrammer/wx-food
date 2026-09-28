@@ -64,12 +64,21 @@
       </view>
 
       <view class="menu-card">
+        <view class="menu-item" @click="goFeedback">
+          <text class="mi">💬</text>
+          <text class="ml">意见反馈</text>
+          <text class="ma">→</text>
+        </view>
         <view v-if="isAdmin" class="menu-item" @click="goAdmin">
           <text class="mi">🛠️</text>
           <text class="ml">内容管理</text>
           <text class="ma">→</text>
         </view>
-        <view class="menu-item"><text class="mi">ℹ️</text><text class="ml">关于 · 今天做什么菜</text><text class="ma">→</text></view>
+        <view class="menu-item" @click="goAbout">
+          <text class="mi">ℹ️</text>
+          <text class="ml">关于 · 今天做什么菜</text>
+          <text class="ma">→</text>
+        </view>
       </view>
     </view>
   </PageLayout>
@@ -112,6 +121,14 @@ function goList(type) {
 
 function goDetail(item) {
   uni.navigateTo({ url: `/subPackages/pkg-recipe/detail/index?id=${item.id}` })
+}
+
+function goFeedback() {
+  uni.navigateTo({ url: '/pages/me/feedback' })
+}
+
+function goAbout() {
+  uni.navigateTo({ url: '/pages/me/about' })
 }
 
 function goAdmin() {

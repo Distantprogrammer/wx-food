@@ -34,6 +34,20 @@
         "navigationStyle": "custom",
         "navigationBarTitleText": "我的菜谱"
       }
+    },
+    {
+      "path": "pages/me/feedback",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "意见反馈"
+      }
+    },
+    {
+      "path": "pages/me/about",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "关于"
+      }
     }
   ],
   "subPackages": [
@@ -111,6 +125,20 @@
           "style": {
             "navigationStyle": "custom",
             "navigationBarTitleText": "分类管理"
+          }
+        },
+        {
+          "path": "feedback/list",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "用户反馈"
+          }
+        },
+        {
+          "path": "notice/edit",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "编辑公告"
           }
         }
       ]

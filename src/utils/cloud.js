@@ -44,3 +44,48 @@ export function callCloud(name, data = {}) {
     // #endif
   })
 }
+
+/**
+ * 上传本地文件到云存储
+ * @param {string} filePath 本地临时路径
+ * @param {object} [opts]
+ * @param {string} [opts.dir='download/recipe-images'] 云端目录
+ * @returns {Promise<{ fileID: string, cloudPath: string, coverImage: string }>}
+ *   coverImage 形如 /download/recipe-images/xxx.jpeg，与种子数据一致
+ */
+export function uploadCloudFile(filePath, opts = {}) {
+  const dir = String(opts.dir || 'download/recipe-images').replace(/^\/+|\/+$/g, '')
+  const rawExt = (String(filePath).match(/\.([a-zA-Z0-9]+)(?:\?|$)/) || [])[1]
+  const ext = (rawExt || 'jpg').toLowerCase().replace(/jpeg/, 'jpeg')
+  const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext === 'jpeg' ? 'jpeg' : ext}`
+  const cloudPath = `${dir}/${name}`
+
+  return new Promise((resolve, reject) => {
+    // #ifdef MP-WEIXIN
+    if (!cloudReady) initCloud()
+    if (!wx.cloud) {
+      reject(new Error('云能力未初始化'))
+      return
+    }
+    wx.cloud.uploadFile({
+      cloudPath,
+      filePath,
+      success: (res) => {
+        if (!res.fileID) {
+          reject(new Error('上传失败：无 fileID'))
+          return
+        }
+        resolve({
+          fileID: res.fileID,
+          cloudPath,
+          coverImage: `/${cloudPath}`
+        })
+      },
+      fail: (err) => reject(new Error(err.errMsg || '上传失败'))
+    })
+    // #endif
+    // #ifndef MP-WEIXIN
+    reject(new Error('仅支持微信小程序云开发'))
+    // #endif
+  })
+}

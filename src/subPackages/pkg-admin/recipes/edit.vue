@@ -21,12 +21,24 @@
         <input v-model="form.calories" class="input" type="number" />
       </view>
       <view class="field">
-        <text class="label">封面图路径</text>
-        <input v-model="form.coverImage" class="input" placeholder="/download/recipe-images/xxx.jpeg" />
+        <text class="label">封面图</text>
+        <view class="cover-wrap">
+          <view class="cover-box" @click="onChooseCover">
+            <image v-if="coverPreview" :src="coverPreview" mode="aspectFill" class="cover-img" />
+            <view v-else class="cover-add">
+              <text class="cover-plus">{{ uploading ? '…' : '＋' }}</text>
+              <text class="cover-tip">{{ uploading ? '上传中' : '上传封面' }}</text>
+            </view>
+          </view>
+          <view v-if="form.coverImage" class="cover-ops">
+            <text class="cover-path">{{ form.coverImage }}</text>
+            <text class="cover-del" @click="clearCover">删除</text>
+          </view>
+        </view>
       </view>
       <view class="field">
         <text class="label">简介</text>
-        <textarea v-model="form.summary" class="textarea" auto-height />
+        <textarea v-model="form.summary" class="textarea" auto-height placeholder="一句话介绍这道菜" />
       </view>
 
       <HtmlBlockEditor v-model="form.ingredientsHtml" title="原料和工具" />
@@ -44,18 +56,22 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import PageLayout from '@/components/page-layout/PageLayout.vue'
 import HtmlBlockEditor from '@/components/HtmlBlockEditor/HtmlBlockEditor.vue'
 import { useAdminGuard } from '@/composables/useAdminGuard'
 import { adminRecipeDetail, adminRecipeSave, adminCategoryList } from '@/services/admin'
+import { uploadCloudFile } from '@/utils/cloud'
+import { getCoverTempUrl } from '@/utils/index'
 import { showApiError } from '@/utils/apiError'
 
 useAdminGuard()
 
 const loading = ref(false)
 const saving = ref(false)
+const uploading = ref(false)
+const coverPreview = ref('')
 const categories = ref([])
 const form = reactive({
   recipeId: null,
@@ -71,6 +87,56 @@ const form = reactive({
   stepsHtml: '',
   notesHtml: ''
 })
+
+watch(
+  () => form.coverImage,
+  async (val) => {
+    if (!val) {
+      coverPreview.value = ''
+      return
+    }
+    // 本地临时路径可直接预览；云路径走换链
+    if (/^(wxfile:|https?:|blob:)/i.test(val) || val.startsWith('http://tmp')) {
+      coverPreview.value = val
+      return
+    }
+    coverPreview.value = await getCoverTempUrl(val)
+  },
+  { immediate: true }
+)
+
+function clearCover() {
+  form.coverImage = ''
+  coverPreview.value = ''
+}
+
+function onChooseCover() {
+  if (uploading.value) return
+  uni.chooseMedia({
+    count: 1,
+    mediaType: ['image'],
+    sizeType: ['compressed'],
+    sourceType: ['album', 'camera'],
+    success: async (res) => {
+      const file = res.tempFiles?.[0]
+      const path = file?.tempFilePath
+      if (!path) return
+      coverPreview.value = path
+      uploading.value = true
+      try {
+        const uploaded = await uploadCloudFile(path)
+        form.coverImage = uploaded.coverImage
+        uni.showToast({ title: '上传成功', icon: 'success' })
+      } catch (e) {
+        showApiError(e, '上传失败')
+        // 失败时回退到已保存路径预览
+        coverPreview.value = form.coverImage ? await getCoverTempUrl(form.coverImage) : ''
+      } finally {
+        uploading.value = false
+      }
+    }
+  })
+}
 
 const categoryLabels = computed(() => categories.value.map((c) => `${c.icon || ''} ${c.name}`.trim()))
 const categoryIndex = computed(() => {
@@ -158,16 +224,73 @@ onLoad(async (q) => {
 .form { padding-bottom: 24rpx; }
 .field { margin-bottom: 24rpx; }
 .label { display: block; font-size: 24rpx; color: $text-secondary; margin-bottom: 10rpx; }
-.input, .picker, .textarea {
+.input,
+.picker {
   width: 100%;
+  height: 80rpx;
+  padding: 0 24rpx;
   background: #fff;
   border-radius: 16rpx;
-  padding: 20rpx 24rpx;
   font-size: 28rpx;
+  color: #333;
   box-sizing: border-box;
 }
-.textarea { min-height: 140rpx; width: 100%; }
-.picker { color: #333; }
+.picker {
+  display: flex;
+  align-items: center;
+  line-height: 1.4;
+}
+.textarea {
+  width: 100%;
+  min-height: 140rpx;
+  padding: 20rpx 24rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.cover-wrap { display: flex; flex-direction: column; gap: 12rpx; }
+.cover-box {
+  width: 240rpx;
+  height: 240rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: $shadow-sm;
+}
+.cover-img { width: 100%; height: 100%; }
+.cover-add {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  border: 2rpx dashed #ffc4a8;
+  border-radius: 16rpx;
+  box-sizing: border-box;
+  color: $primary-color;
+}
+.cover-plus { font-size: 48rpx; line-height: 1; }
+.cover-tip { font-size: 24rpx; }
+.cover-ops {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+.cover-path {
+  flex: 1;
+  min-width: 0;
+  font-size: 22rpx;
+  color: $text-light;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cover-del { font-size: 24rpx; color: #e74c3c; flex-shrink: 0; }
 .footer {
   padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom));
   background: #fff;

@@ -25,6 +25,22 @@
         </view>
         <text class="ma">→</text>
       </view>
+      <view class="menu-item" @click="go('/subPackages/pkg-admin/notice/edit')">
+        <text class="mi">📢</text>
+        <view class="mid">
+          <text class="ml">公告管理</text>
+          <text class="sub">编辑「关于」页展示的公告内容</text>
+        </view>
+        <text class="ma">→</text>
+      </view>
+      <view class="menu-item" @click="go('/subPackages/pkg-admin/feedback/list')">
+        <text class="mi">💬</text>
+        <view class="mid">
+          <text class="ml">用户反馈</text>
+          <text class="sub">查看用户提交的意见与建议</text>
+        </view>
+        <text class="ma">→</text>
+      </view>
       <view class="menu-item" @click="go('/subPackages/pkg-admin/seed/index')">
         <text class="mi">📦</text>
         <view class="mid">

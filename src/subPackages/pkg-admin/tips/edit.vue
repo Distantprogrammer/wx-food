@@ -8,7 +8,7 @@
       </view>
       <view class="field">
         <text class="label">摘要</text>
-        <textarea v-model="form.summary" class="textarea" auto-height />
+        <textarea v-model="form.summary" class="textarea" auto-height placeholder="简短摘要" />
       </view>
       <HtmlBlockEditor v-model="form.markdownHtml" title="正文" />
     </view>
@@ -87,15 +87,26 @@ onLoad((q) => {
 @import '@/styles/variables.scss';
 .field { margin-bottom: 24rpx; }
 .label { display: block; font-size: 24rpx; color: $text-secondary; margin-bottom: 10rpx; }
-.input, .textarea {
+.input {
   width: 100%;
+  height: 80rpx;
+  padding: 0 24rpx;
   background: #fff;
   border-radius: 16rpx;
-  padding: 20rpx 24rpx;
   font-size: 28rpx;
+  color: #333;
   box-sizing: border-box;
 }
-.textarea { min-height: 140rpx; }
+.textarea {
+  width: 100%;
+  min-height: 140rpx;
+  padding: 20rpx 24rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  font-size: 28rpx;
+  color: #333;
+  box-sizing: border-box;
+}
 .footer {
   padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom));
   background: #fff;

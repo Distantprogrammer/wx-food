@@ -246,6 +246,71 @@ exports.main = async (event) => {
       return common.ok(true)
     }
 
+    // ---------- feedbacks ----------
+    if (action === 'feedbackList') {
+      const page = Math.max(Number(event.page) || 1, 1)
+      const limit = Math.min(Number(event.limit) || PAGE_SIZE, 50)
+      const skip = (page - 1) * limit
+      const col = db.collection('feedbacks')
+      const countRes = await col.count()
+      const listRes = await col.orderBy('createTime', 'desc').skip(skip).limit(limit).get()
+      const list = (listRes.data || []).map((doc) => ({
+        id: doc._id,
+        nickname: doc.nickname || '',
+        contact: doc.contact || '',
+        content: doc.content || '',
+        createTime: doc.createTime || null
+      }))
+      return common.ok({
+        list,
+        page,
+        limit,
+        total: countRes.total || 0,
+        hasMore: skip + list.length < (countRes.total || 0)
+      })
+    }
+
+    if (action === 'feedbackDelete') {
+      const id = String(event.id || '').trim()
+      if (!id) return common.fail('缺少 id', 400)
+      await db.collection('feedbacks').doc(id).remove()
+      return common.ok(true)
+    }
+
+    // ---------- notice / announcement ----------
+    if (action === 'noticeGet') {
+      const NOTICE_KEY = 'announcement'
+      const found = await db.collection('settings').where({ key: NOTICE_KEY }).limit(1).get()
+      const doc = found.data[0]
+      return common.ok({
+        title: doc?.title || '关于 · 今天做什么菜',
+        contentHtml: doc?.contentHtml || '',
+        updateTime: doc?.updateTime || null
+      })
+    }
+
+    if (action === 'noticeSave') {
+      const NOTICE_KEY = 'announcement'
+      const payload = event.data || event
+      const title = String(payload.title || '').trim() || '关于 · 今天做什么菜'
+      const contentHtml = String(payload.contentHtml || '')
+      const docData = {
+        key: NOTICE_KEY,
+        title,
+        contentHtml,
+        updateTime: db.serverDate()
+      }
+      const found = await db.collection('settings').where({ key: NOTICE_KEY }).limit(1).get()
+      if (found.data[0]) {
+        await db.collection('settings').doc(found.data[0]._id).update({ data: docData })
+      } else {
+        await db.collection('settings').add({
+          data: { ...docData, createTime: db.serverDate() }
+        })
+      }
+      return common.ok({ title })
+    }
+
     return common.fail(`未知操作: ${action}`, 400)
   } catch (error) {
     return common.mapError(error)

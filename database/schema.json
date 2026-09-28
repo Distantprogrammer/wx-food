@@ -136,6 +136,38 @@
         { "name": "user_recipe", "unique": true, "keys": [{ "name": "userId", "direction": "1" }, { "name": "recipeId", "direction": "1" }] },
         { "name": "user_update", "keys": [{ "name": "userId", "direction": "1" }, { "name": "updateTime", "direction": "-1" }] }
       ]
+    },
+    {
+      "name": "feedbacks",
+      "description": "用户意见反馈",
+      "fields": {
+        "_id": "string",
+        "openid": "string",
+        "userId": "string",
+        "nickname": "string",
+        "contact": "string",
+        "content": "string",
+        "createTime": "date"
+      },
+      "indexes": [
+        { "name": "createTime", "keys": [{ "name": "createTime", "direction": "-1" }] },
+        { "name": "openid", "keys": [{ "name": "openid", "direction": "1" }] }
+      ]
+    },
+    {
+      "name": "settings",
+      "description": "站点配置（公告等）",
+      "fields": {
+        "_id": "string",
+        "key": "string",
+        "title": "string",
+        "contentHtml": "string",
+        "createTime": "date",
+        "updateTime": "date"
+      },
+      "indexes": [
+        { "name": "key_unique", "unique": true, "keys": [{ "name": "key", "direction": "1" }] }
+      ]
     }
   ],
   "role": {

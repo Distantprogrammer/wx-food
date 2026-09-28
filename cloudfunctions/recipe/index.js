@@ -105,6 +105,8 @@ exports.main = async (event) => {
     const countRes = await col.count()
     let query = db.collection('recipes').where(where)
     if (event.sort === 'likes') query = query.orderBy('likes', 'desc')
+    else if (event.sort === 'calories') query = query.orderBy('calories', 'asc')
+    else if (event.sort === 'favorites') query = query.orderBy('favorites', 'desc')
     else query = query.orderBy('recipeId', 'asc')
     const listRes = await query.skip(skip).limit(limit).get()
     const list = filterVisible(listRes.data)

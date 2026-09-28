@@ -55,7 +55,7 @@
         <view class="hbe-dialog" @click.stop>
           <text class="hbe-d-title">粘贴 HTML</text>
           <text class="hbe-d-desc">粘贴后会自动识别段落 / 有序 / 无序列表</text>
-          <textarea v-model="pasteText" class="hbe-paste" placeholder="<ul><li>...</li></ul>" />
+          <textarea v-model="pasteText" class="hbe-paste" placeholder="粘贴 HTML，如 ul / ol / p 片段" />
           <view class="hbe-d-row">
             <label class="hbe-check" @click="pasteReplace = !pasteReplace">
               <text class="box">{{ pasteReplace ? '☑' : '☐' }}</text>
@@ -328,7 +328,6 @@ function copySource() {
 
 .hbe-textarea {
   width: 100%;
-  min-height: 88rpx;
   background: #fff;
   border-radius: 12rpx;
   padding: 16rpx;
