@@ -1,8 +1,8 @@
-﻿<template>
+<template>
   <PageLayout
     title="菜品管理"
     show-back
-    background-color="#FFF8F0"
+    background-color="#F6F7F2"
     :refresher-enabled="true"
     :refresher-triggered="refreshing"
     @refresherrefresh="onRefresh"
@@ -123,7 +123,7 @@ onShow(() => load(true))
 .search {
   flex: 1;
   height: 72rpx;
-  background: #fff;
+  background: #FFFFFF;
   border-radius: 16rpx;
   padding: 0 24rpx;
   font-size: 26rpx;
@@ -143,7 +143,7 @@ onShow(() => load(true))
 .row {
   display: flex;
   align-items: center;
-  background: #fff;
+  background: #FFFFFF;
   border-radius: 20rpx;
   padding: 24rpx;
   margin-bottom: 16rpx;
@@ -156,5 +156,5 @@ onShow(() => load(true))
 .ops { display: flex; gap: 16rpx; margin-left: 12rpx; }
 .op { font-size: 24rpx; color: $primary-color; }
 .op.danger { color: #e74c3c; }
-.empty, .more { text-align: center; color: #999; padding: 32rpx; font-size: 24rpx; }
+.empty, .more { text-align: center; color: #8A9590; padding: 32rpx; font-size: 24rpx; }
 </style>

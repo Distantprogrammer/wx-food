@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="水产默认封面">
+  <rect width="1200" height="900" fill="#F1F4EE"/>
+  <path d="M0 720c205-64 371 35 595-26 240-65 406 29 605-52v258H0Z" fill="#D9E6D8"/>
+  <ellipse cx="600" cy="500" rx="320" ry="180" fill="#FDFDF9" stroke="#176B4A" stroke-width="24"/>
+  <path d="M420 505c92-133 250-139 356-10 33 40 29 93-14 125-105 77-262 47-342-45Z" fill="#76AEB1"/>
+  <path d="M394 504l-108-91v180Z" fill="#5B9496"/>
+  <path d="M613 402c63 27 94 74 115 121" fill="none" stroke="#D9E9D7" stroke-width="13" stroke-linecap="round"/>
+  <circle cx="708" cy="475" r="10" fill="#1F2D2A"/>
+  <g stroke="#6DA95A" stroke-width="16" stroke-linecap="round"><path d="M492 379l-40-63"/><path d="M608 356l13-73"/><path d="M732 371l42-56"/></g>
+  <g fill="#E7B23A"><ellipse cx="469" cy="419" rx="17" ry="11" transform="rotate(35 469 419)"/><ellipse cx="592" cy="361" rx="17" ry="11" transform="rotate(-11 592 361)"/><ellipse cx="747" cy="408" rx="17" ry="11" transform="rotate(-34 747 408)"/></g>
+</svg>

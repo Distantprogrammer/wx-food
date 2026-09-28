@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="早餐默认封面">
+  <rect width="1200" height="900" fill="#F1F4EE"/>
+  <path d="M0 730c202-78 375 23 605-27 231-50 400 23 595-50v247H0Z" fill="#DCE7DB"/>
+  <rect x="296" y="346" width="610" height="320" rx="42" fill="#176B4A"/>
+  <rect x="320" y="370" width="562" height="272" rx="30" fill="#FDFDF9"/>
+  <path d="M402 417c-42 19-52 105-3 137 63 41 141-8 127-79-9-48-75-80-124-58Z" fill="#F2BD57"/>
+  <circle cx="463" cy="478" r="39" fill="#FFF5C7"/>
+  <path d="M612 413c100-23 169 37 145 121-13 46-58 73-117 58-74-19-93-132-28-179Z" fill="#F0D595"/>
+  <path d="M637 445c57-16 93 17 86 63-7 45-55 60-93 36-38-24-35-82 7-99Z" fill="#D98A4F"/>
+  <path d="M788 439h55v137c0 35-70 35-70 0V476c0-20 7-37 15-37Z" fill="#A5C5AF"/>
+  <path d="M773 471h70" stroke="#176B4A" stroke-width="13"/>
+  <path d="M830 401c-19-27 29-43 2-75" fill="none" stroke="#B8C8B9" stroke-width="17" stroke-linecap="round"/>
+</svg>

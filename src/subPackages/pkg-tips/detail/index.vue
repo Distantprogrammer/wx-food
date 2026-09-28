@@ -1,9 +1,10 @@
 <template>
-  <PageLayout title="技巧详情" show-back background-color="#FFF8F0">
+  <PageLayout title="技巧详情" show-back background-color="#F6F7F2" :content-padding-x="32">
     <view v-if="loading" class="empty">加载中...</view>
-    <view v-else-if="tip" class="card">
+    <view v-else-if="tip" class="article">
       <text class="title">{{ tip.title }}</text>
       <text v-if="tip.summary" class="summary">{{ tip.summary }}</text>
+      <view class="divider" />
       <rich-text class="body" :nodes="tip.markdownHtml" />
     </view>
   </PageLayout>
@@ -35,37 +36,47 @@ onLoad(async (q) => {
 <style lang="scss" scoped>
 @import '@/styles/variables.scss';
 
-.card {
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 32rpx;
-  box-shadow: $shadow-md;
+.article {
+  padding: 8rpx 0 48rpx;
 }
 
 .title {
   display: block;
-  font-size: 36rpx;
-  font-weight: 700;
-  margin-bottom: 12rpx;
+  font-size: 40rpx;
+  font-weight: 750;
+  color: $text-primary;
+  line-height: $line-tight;
+  margin-bottom: 16rpx;
+  word-break: break-word;
 }
 
 .summary {
   display: block;
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: $text-secondary;
-  line-height: 1.6;
-  margin-bottom: 24rpx;
+  line-height: $line-loose;
+  margin-bottom: 8rpx;
+  word-break: break-word;
+}
+
+.divider {
+  height: 1rpx;
+  background: $border-color;
+  margin: 28rpx 0;
 }
 
 .body {
-  font-size: 28rpx;
-  color: #444;
-  line-height: 1.8;
+  display: block;
+  font-size: 26rpx;
+  color: $text-primary;
+  line-height: 1.85;
+  word-break: break-word;
 }
 
 .empty {
   padding: 80rpx;
   text-align: center;
-  color: #999;
+  color: $text-light;
+  font-size: 26rpx;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <PageLayout title="意见反馈" show-back background-color="#FFF8F0">
+  <PageLayout title="意见反馈" show-back background-color="#F6F7F2">
     <WriteForm
       :author-name="authorName"
       :submitting="submitting"

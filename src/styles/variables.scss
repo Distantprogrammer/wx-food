@@ -1,27 +1,43 @@
-$primary-color: #FF6B35;
-$primary-light: #FF8C5A;
-$primary-dark: #E55A2B;
-$secondary-color: #FFB366;
-$accent-color: #FFD93D;
+/* ===== Brand / Color tokens ===== */
+$primary-color: #176B4A;
+$primary-hover: #0F593B;
+$primary-soft: rgba(23, 107, 74, 0.1);
+$primary-light: #2A8A62;
+$primary-dark: #0F593B;
 
-$bg-color: #FFF8F0;
+$accent-tomato: #D94C3D;
+$accent-warm: #E7B23A;
+$accent-color: $accent-warm;
+$secondary-color: #5A9B7A;
+
+$bg-color: #F6F7F2;
 $bg-card: #FFFFFF;
-$bg-muted: #F8F8F8;
+$bg-muted: #EEF1EB;
+$bg-soft: #E8EDE8;
 
-$text-primary: #2D2D2D;
-$text-secondary: #666666;
-$text-light: #999999;
+$text-primary: #1F2D2A;
+$text-secondary: #66736E;
+$text-light: #8A9590;
 $text-white: #FFFFFF;
 
-$border-color: #F0F0F0;
-$success-color: #67C23A;
-$warning-color: #E6A23C;
-$error-color: #F56C6C;
+$border-color: #E5E9E3;
+$success-color: #2F9B63;
+$success-soft: rgba(47, 155, 99, 0.14);
+$warning-color: #C98A12;
+$warning-soft: rgba(201, 138, 18, 0.16);
+$error-color: #D94C3D;
+$error-soft: rgba(217, 76, 61, 0.12);
 
+/* aliases used across legacy components */
 $ink: $text-primary;
+$ink-soft: $text-secondary;
 $muted: $text-light;
 $wechat: $primary-color;
+$wechat-dark: $primary-hover;
+$card: $bg-card;
+$line: $border-color;
 
+/* ===== Typography ===== */
 $font-size-xs: 22rpx;
 $font-size-sm: 24rpx;
 $font-size-base: 28rpx;
@@ -29,18 +45,48 @@ $font-size-md: 32rpx;
 $font-size-lg: 36rpx;
 $font-size-xl: 40rpx;
 
+$line-tight: 1.35;
+$line-base: 1.55;
+$line-loose: 1.75;
+
+/* ===== Spacing ===== */
+$spacing-xs: 8rpx;
 $spacing-sm: 16rpx;
 $spacing-md: 24rpx;
 $spacing-lg: 32rpx;
+$page-padding-x: 32rpx;
+$card-padding: 24rpx;
+$list-gap: 16rpx;
 
+/* ===== Radius ===== */
+$radius-sm: 12rpx;
 $radius-md: 16rpx;
-$radius-lg: 24rpx;
-$radius-round: 100rpx;
+$radius-lg: 20rpx;
+$radius-round: 999rpx;
 
-$shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
-$shadow-md: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
-$shadow-lg: 0 8rpx 32rpx rgba(0, 0, 0, 0.12);
+/* ===== Button / Icon sizes ===== */
+$btn-height: 84rpx;
+$btn-height-sm: 60rpx;
+$btn-radius: $radius-sm;
+$btn-font: 28rpx;
+$btn-font-sm: 24rpx;
+$icon-touch: 64rpx;
+$icon-visual: 34rpx;
+$tab-icon-size: 38rpx;
 
+/* ===== Shadow (very light) ===== */
+$shadow-sm: 0 2rpx 8rpx rgba(31, 45, 42, 0.04);
+$shadow-md: 0 4rpx 16rpx rgba(31, 45, 42, 0.06);
+$shadow-lg: 0 8rpx 24rpx rgba(31, 45, 42, 0.08);
+$shadow-panel: $shadow-sm;
+$shadow-card: $shadow-sm;
+
+/* ===== Z-index ===== */
 $z-index-header: 100;
 $z-index-tabbar: 200;
 $z-index-popup: 1100;
+
+/* ===== Motion ===== */
+$ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+$duration-fast: 160ms;
+$duration-base: 220ms;

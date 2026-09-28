@@ -1,8 +1,8 @@
-﻿<template>
+<template>
   <PageLayout
     title="技巧管理"
     show-back
-    background-color="#FFF8F0"
+    background-color="#F6F7F2"
     :refresher-enabled="true"
     :refresher-triggered="refreshing"
     @refresherrefresh="onRefresh"
@@ -105,14 +105,14 @@ onShow(() => load(true))
 <style lang="scss" scoped>
 @import '@/styles/variables.scss';
 .toolbar { display: flex; gap: 16rpx; margin-bottom: 20rpx; }
-.search { flex: 1; height: 72rpx; background: #fff; border-radius: 16rpx; padding: 0 24rpx; font-size: 26rpx; }
+.search { flex: 1; height: 72rpx; background: #FFFFFF; border-radius: 16rpx; padding: 0 24rpx; font-size: 26rpx; }
 .add { height: 72rpx; line-height: 72rpx; padding: 0 24rpx; background: $primary-color; color: #fff; border-radius: 16rpx; font-size: 26rpx; font-weight: 600; }
-.row { display: flex; align-items: center; background: #fff; border-radius: 20rpx; padding: 24rpx; margin-bottom: 16rpx; box-shadow: $shadow-sm; }
+.row { display: flex; align-items: center; background: #FFFFFF; border-radius: 20rpx; padding: 24rpx; margin-bottom: 16rpx; box-shadow: $shadow-sm; }
 .main { flex: 1; min-width: 0; }
 .name { display: block; font-size: 28rpx; font-weight: 600; }
 .meta { display: block; font-size: 22rpx; color: $text-light; margin-top: 8rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ops { display: flex; gap: 16rpx; }
 .op { font-size: 24rpx; color: $primary-color; }
 .op.danger { color: #e74c3c; }
-.empty, .more { text-align: center; color: #999; padding: 32rpx; font-size: 24rpx; }
+.empty, .more { text-align: center; color: #8A9590; padding: 32rpx; font-size: 24rpx; }
 </style>

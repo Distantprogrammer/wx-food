@@ -26,23 +26,9 @@
       </view>
     </view>
 
-    <view class="safe-row">
-      <view class="safe-chip" :class="{ warning: sensitiveStatus === 'pending', failed: sensitiveStatus === 'failed' }">
-        <text>{{ sensitiveStatus === 'passed' ? '✓' : '○' }}</text>
-        <text>本地敏感词过滤</text>
-      </view>
-      <view class="safe-chip">
-        <text>✓</text>
-        <text>仅文字无图片</text>
-      </view>
-      <view class="safe-chip">
-        <text>✓</text>
-        <text>提交后立即送达</text>
-      </view>
-      <view class="safe-chip">
-        <text>✓</text>
-        <text>无需人工审核</text>
-      </view>
+    <view class="safe-meta" :class="{ warning: sensitiveStatus === 'pending', failed: sensitiveStatus === 'failed', ok: sensitiveStatus === 'passed' }">
+      <text class="safe-dot">{{ sensitiveStatus === 'passed' ? '✓' : (sensitiveStatus === 'failed' ? '!' : '·') }}</text>
+      <text class="safe-text">内容将在本地做基础过滤后提交</text>
     </view>
 
     <button
@@ -56,10 +42,7 @@
     </button>
 
     <view class="preview-section">
-      <view class="section-title">
-        <text class="section-title-text">提交预览</text>
-        <text class="tag">即时送达</text>
-      </view>
+      <text class="section-title-text">提交预览</text>
       <view class="preview-card">
         <view class="letter-head">
           <view class="avatar">{{ previewAvatar }}</view>
@@ -176,17 +159,17 @@ async function handleSubmit() {
 .write-form {
   display: flex;
   flex-direction: column;
-  gap: 28rpx;
+  gap: 24rpx;
 }
 
 .form-card {
   display: flex;
   flex-direction: column;
   gap: 28rpx;
-  padding: 32rpx;
-  border-radius: $radius-lg;
-  background: #fff;
-  box-shadow: $shadow-md;
+  padding: $card-padding;
+  border-radius: $radius-md;
+  background: $bg-card;
+  border: 1rpx solid $border-color;
 }
 
 .field {
@@ -198,15 +181,16 @@ async function handleSubmit() {
 .label {
   font-size: 24rpx;
   color: $text-secondary;
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .input {
   width: 100%;
   height: 80rpx;
-  padding: 0 24rpx;
-  border-radius: 16rpx;
-  background: $bg-color;
+  padding: 0 20rpx;
+  border-radius: $radius-sm;
+  background: $bg-muted;
+  border: 1rpx solid $border-color;
   font-size: 28rpx;
   color: $text-primary;
   box-sizing: border-box;
@@ -215,9 +199,10 @@ async function handleSubmit() {
 .textarea {
   width: 100%;
   height: 360rpx;
-  padding: 24rpx;
-  border-radius: 16rpx;
-  background: $bg-color;
+  padding: 20rpx;
+  border-radius: $radius-sm;
+  background: $bg-muted;
+  border: 1rpx solid $border-color;
   color: $text-primary;
   font-size: 28rpx;
   line-height: 44rpx;
@@ -230,47 +215,52 @@ async function handleSubmit() {
   font-size: 22rpx;
 }
 
-.safe-row {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16rpx;
-}
-
-.safe-chip {
+.safe-meta {
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  min-height: 84rpx;
-  padding: 16rpx 20rpx;
-  border-radius: 16rpx;
-  background: rgba(255, 107, 53, 0.08);
-  color: $primary-dark;
+  gap: 10rpx;
+  padding: 0 4rpx;
+  color: $text-light;
   font-size: 22rpx;
-  line-height: 30rpx;
-  font-weight: 700;
+
+  &.ok {
+    color: $success-color;
+  }
 
   &.warning {
-    background: rgba(230, 162, 60, 0.12);
-    color: #7a5a06;
+    color: $warning-color;
   }
 
   &.failed {
-    background: rgba(245, 108, 108, 0.12);
-    color: #c94f44;
+    color: $error-color;
   }
 }
 
+.safe-dot {
+  font-size: 22rpx;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.safe-text {
+  line-height: 1.4;
+}
+
 .primary-button {
-  height: 92rpx;
+  height: $btn-height;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 46rpx;
-  background: linear-gradient(135deg, #ff6b35, #ff8c5a);
-  color: #fff;
+  border-radius: $btn-radius;
+  background: $primary-color;
+  color: $text-white;
   font-size: 30rpx;
   font-weight: 700;
+
+  &:active {
+    background: $primary-hover;
+  }
 
   &.disabled {
     opacity: 0.72;
@@ -281,58 +271,42 @@ async function handleSubmit() {
   margin-top: 8rpx;
 }
 
-.section-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20rpx;
-}
-
 .section-title-text {
-  font-size: 30rpx;
+  display: block;
+  font-size: 28rpx;
   font-weight: 700;
   color: $text-primary;
-}
-
-.tag {
-  display: inline-flex;
-  align-items: center;
-  height: 44rpx;
-  padding: 0 16rpx;
-  border-radius: 12rpx;
-  background: rgba(255, 107, 53, 0.12);
-  color: $primary-color;
-  font-size: 20rpx;
-  font-weight: 700;
+  margin-bottom: 16rpx;
 }
 
 .preview-card {
   display: flex;
   flex-direction: column;
-  gap: 20rpx;
-  padding: 24rpx;
-  border-radius: $radius-lg;
-  background: #fff;
-  box-shadow: $shadow-sm;
+  gap: 18rpx;
+  padding: 22rpx;
+  border-radius: $radius-md;
+  background: $bg-card;
+  border: 1rpx solid $border-color;
 }
 
 .letter-head {
   display: flex;
   align-items: center;
-  gap: 20rpx;
+  gap: 16rpx;
 }
 
 .avatar {
-  width: 68rpx;
-  height: 68rpx;
+  width: 64rpx;
+  height: 64rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 16rpx;
-  background: linear-gradient(135deg, #ffe0d0, #ffc9a8);
-  color: #fff;
+  border-radius: $radius-sm;
+  background: $primary-soft;
+  color: $primary-color;
   font-size: 26rpx;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .head-main {
@@ -345,6 +319,9 @@ async function handleSubmit() {
   font-size: 28rpx;
   font-weight: 700;
   color: $text-primary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .letter-time {
@@ -352,6 +329,9 @@ async function handleSubmit() {
   margin-top: 4rpx;
   color: $text-light;
   font-size: 22rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .letter-body {

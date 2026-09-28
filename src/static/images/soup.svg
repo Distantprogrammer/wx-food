@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="汤羹默认封面">
+  <rect width="1200" height="900" fill="#F1F4EE"/>
+  <path d="M0 728c212-75 367 33 603-19 241-53 396 15 597-49v240H0Z" fill="#DCE7DB"/>
+  <ellipse cx="600" cy="550" rx="304" ry="125" fill="#176B4A"/>
+  <path d="M350 454h500v112c0 114-112 175-250 175S350 680 350 566Z" fill="#FDFDF9"/>
+  <ellipse cx="600" cy="455" rx="250" ry="92" fill="#E7B23A"/>
+  <ellipse cx="600" cy="455" rx="215" ry="71" fill="#F7D76A"/>
+  <g fill="#5F9F62"><circle cx="512" cy="444" r="28"/><circle cx="660" cy="476" r="26"/><circle cx="711" cy="429" r="20"/></g>
+  <g fill="#D96A4A"><circle cx="582" cy="421" r="18"/><circle cx="620" cy="500" r="19"/><circle cx="457" cy="472" r="16"/></g>
+  <g fill="none" stroke="#B8C8B9" stroke-width="20" stroke-linecap="round"><path d="M500 348c-32-38 35-54 4-100"/><path d="M600 340c-31-38 36-55 3-101"/><path d="M699 347c-31-37 36-54 4-99"/></g>
+  <path d="M850 530c72-21 108 14 107 59-1 41-44 66-107 49" fill="none" stroke="#176B4A" stroke-width="25" stroke-linecap="round"/>
+</svg>

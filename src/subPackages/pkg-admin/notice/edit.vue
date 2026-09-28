@@ -1,5 +1,5 @@
 <template>
-  <PageLayout title="编辑公告" show-back background-color="#FFF8F0" :footer-height="120">
+  <PageLayout title="编辑公告" show-back background-color="#F6F7F2" :footer-height="120">
     <view v-if="loading" class="empty">加载中...</view>
     <view v-else class="form">
       <view class="field">
@@ -88,25 +88,25 @@ onLoad(load)
   width: 100%;
   height: 80rpx;
   padding: 0 24rpx;
-  background: #fff;
+  background: #FFFFFF;
   border-radius: 16rpx;
   font-size: 28rpx;
-  color: #333;
+  color: #1F2D2A;
   box-sizing: border-box;
 }
 .footer {
   padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom));
-  background: #fff;
+  background: #FFFFFF;
 }
 .btn {
   width: 100%;
-  height: 88rpx;
-  line-height: 88rpx;
-  background: linear-gradient(135deg, #ff6b35, #ff8c5a);
+  height: 84rpx;
+  line-height: 84rpx;
+  background: #176B4A;
   color: #fff;
-  border-radius: 44rpx;
+  border-radius: 12rpx;
   font-size: 30rpx;
   font-weight: 600;
 }
-.empty { text-align: center; color: #999; padding: 80rpx; }
+.empty { text-align: center; color: #8A9590; padding: 80rpx; }
 </style>

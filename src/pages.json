@@ -148,15 +148,17 @@
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "今天做什么菜",
     "navigationBarBackgroundColor": "#FFFFFF",
-    "backgroundColor": "#FFF8F0",
+    "backgroundColor": "#F6F7F2",
+    "enableShareAppMessage": true,
+    "enableShareTimeline": true,
     "app-plus": {
-      "background": "#FFF8F0"
+      "background": "#F6F7F2"
     }
   },
   "tabBar": {
     "custom": true,
-    "color": "#999999",
-    "selectedColor": "#FF6B35",
+    "color": "#8A9590",
+    "selectedColor": "#176B4A",
     "borderStyle": "black",
     "backgroundColor": "#FFFFFF",
     "list": [

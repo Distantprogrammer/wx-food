@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="甜品默认封面">
+  <rect width="1200" height="900" fill="#F1F4EE"/>
+  <path d="M0 729c213-65 378 34 594-22 241-62 411 31 606-49v242H0Z" fill="#DCE7DB"/>
+  <ellipse cx="600" cy="535" rx="310" ry="136" fill="#176B4A"/>
+  <ellipse cx="600" cy="500" rx="275" ry="120" fill="#FDFDF9"/>
+  <path d="M465 508c1-95 63-159 135-159s135 64 135 159Z" fill="#F5D584"/>
+  <path d="M485 474c33-65 74 33 113-25s82 42 117-26" fill="none" stroke="#FFF6D7" stroke-width="20" stroke-linecap="round"/>
+  <g fill="#D95A4B"><circle cx="538" cy="403" r="21"/><circle cx="645" cy="422" r="23"/><circle cx="601" cy="365" r="18"/></g>
+  <g fill="#6DA960"><ellipse cx="518" cy="370" rx="22" ry="12" transform="rotate(-34 518 370)"/><ellipse cx="680" cy="379" rx="22" ry="12" transform="rotate(37 680 379)"/></g>
+  <path d="M403 586c42-71 82-74 116 0" fill="none" stroke="#E7B23A" stroke-width="18" stroke-linecap="round"/>
+  <path d="M682 586c42-71 82-74 116 0" fill="none" stroke="#E7B23A" stroke-width="18" stroke-linecap="round"/>
+</svg>

@@ -4,8 +4,8 @@
     show-tab-bar
     active-tab="category"
     :scrollable="false"
-    background-color="#ffffff"
-    :header-style="{ background: '#ffffff', color: '#2d2d2d', borderBottom: '1rpx solid #f0f0f0' }"
+    background-color="#F6F7F2"
+    :header-style="{ background: '#FFFFFF', color: '#1F2D2A', borderBottom: '1rpx solid #E5E9E3' }"
     :header-content-height="88"
     :content-padding-x="0"
     :extra-bottom-padding="0"
@@ -13,11 +13,12 @@
     <template #header-content>
       <view class="search-wrap">
         <view class="search-bar">
-          <text class="search-icon">🔍</text>
+          <image class="search-icon" src="/static/icons/search.png" mode="aspectFit" />
           <input
             v-model="keyword"
             class="search-input"
             placeholder="搜索菜谱、食材"
+            placeholder-class="search-ph"
             confirm-type="search"
             @confirm="reload"
           />
@@ -42,10 +43,12 @@
       <view class="category-right">
         <view class="filter-bar">
           <view class="filter-item" :class="{ active: !!difficulty }" @click="openDifficulty">
-            {{ difficultyLabel }} ▼
+            <text class="filter-text">{{ difficultyLabel }}</text>
+            <text class="filter-caret">▾</text>
           </view>
           <view class="filter-item" :class="{ active: sort !== 'default' }" @click="openSort">
-            {{ sortLabel }} ▼
+            <text class="filter-text">{{ sortLabel }}</text>
+            <text class="filter-caret">▾</text>
           </view>
         </view>
 
@@ -61,14 +64,13 @@
           <view class="recipe-grid">
             <view v-for="item in list" :key="item.id" class="mini-card" @click="goDetail(item)">
               <view class="cover">
-                <image v-if="coverMap[item.id]" :src="coverMap[item.id]" mode="aspectFill" class="cover-img" />
-                <view v-else class="cover-ph">🍽️</view>
+                <image :src="coverMap[item.id] || placeholderOf(item)" mode="aspectFill" class="cover-img" />
               </view>
               <view class="info">
                 <text class="name">{{ item.title }}</text>
                 <view class="meta">
-                  <text>{{ item.difficultyText }}</text>
-                  <text>❤️ {{ item.likes || 0 }}</text>
+                  <text class="meta-item">{{ item.difficultyText }}</text>
+                  <text class="meta-item likes">喜欢 {{ item.likes || 0 }}</text>
                 </view>
               </view>
             </view>
@@ -86,6 +88,7 @@ import PageLayout from '@/components/page-layout/PageLayout.vue'
 import { useTabPage } from '@/composables/useTabPage'
 import { getCategories, getRecipeList } from '@/services/recipe'
 import { getCoverTempUrlBatch } from '@/utils/index'
+import { getRecipePlaceholder } from '@/utils/recipePlaceholder'
 import { showApiError } from '@/utils/apiError'
 
 useTabPage('category')
@@ -127,13 +130,17 @@ const sortLabel = computed(() => {
   return hit && hit.value !== 'default' ? hit.label : '排序'
 })
 
+function placeholderOf(item) {
+  return getRecipePlaceholder(item?.categorySlug)
+}
+
 async function resolveCovers(rows) {
   const urls = (rows || []).map((r) => r.coverImage).filter(Boolean)
-  const byUrl = await getCoverTempUrlBatch(urls)
+  const byUrl = urls.length ? await getCoverTempUrlBatch(urls) : {}
   const next = { ...coverMap.value }
   ;(rows || []).forEach((item) => {
-    const u = byUrl[item.coverImage]
-    if (u) next[item.id] = u
+    const u = item.coverImage ? byUrl[item.coverImage] : ''
+    next[item.id] = u || getRecipePlaceholder(item.categorySlug)
   })
   coverMap.value = next
 }
@@ -242,26 +249,38 @@ onMounted(async () => {
 
 .search-wrap {
   padding: 0 24rpx 16rpx;
-  background: #fff;
+  background: $bg-card;
 }
 
 .search-bar {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 12rpx;
   background: $bg-muted;
-  border-radius: 32rpx;
-  padding: 16rpx 24rpx;
+  border: 1rpx solid $border-color;
+  border-radius: $radius-sm;
+  padding: 0 20rpx;
+  height: 68rpx;
 }
 
 .search-icon {
-  font-size: 28rpx;
+  width: 32rpx;
+  height: 32rpx;
+  flex-shrink: 0;
+  opacity: 0.65;
 }
 
 .search-input {
   flex: 1;
+  min-width: 0;
+  height: 68rpx;
+  line-height: 68rpx;
   font-size: 26rpx;
   color: $text-primary;
+}
+
+.search-ph {
+  color: $text-light;
 }
 
 .category-layout {
@@ -271,25 +290,28 @@ onMounted(async () => {
 }
 
 .category-nav {
-  width: 180rpx;
+  width: 168rpx;
   background: $bg-muted;
   height: 100%;
   flex-shrink: 0;
+  border-right: 1rpx solid $border-color;
 }
 
 .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24rpx 16rpx;
-  font-size: 24rpx;
+  justify-content: center;
+  padding: 22rpx 12rpx;
+  font-size: 22rpx;
   color: $text-secondary;
   position: relative;
+  gap: 8rpx;
 
   &.active {
-    background: #fff;
+    background: $bg-card;
     color: $primary-color;
-    font-weight: 600;
+    font-weight: 650;
 
     &::before {
       content: '';
@@ -298,20 +320,31 @@ onMounted(async () => {
       top: 50%;
       transform: translateY(-50%);
       width: 6rpx;
-      height: 40rpx;
-      background: linear-gradient(135deg, #ff6b35, #ff8c5a);
+      height: 36rpx;
+      background: $primary-color;
       border-radius: 0 4rpx 4rpx 0;
     }
   }
 }
 
 .nav-icon {
-  font-size: 36rpx;
-  margin-bottom: 8rpx;
+  font-size: 30rpx;
+  line-height: 1;
+  width: 32rpx;
+  height: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .nav-name {
   text-align: center;
+  line-height: 1.3;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .category-right {
@@ -319,33 +352,52 @@ onMounted(async () => {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: $bg-color;
   height: 100%;
 }
 
 .filter-bar {
   display: flex;
   flex-shrink: 0;
-  padding: 16rpx 24rpx;
-  background: #fff;
+  padding: 14rpx 16rpx;
+  background: $bg-card;
   border-bottom: 1rpx solid $border-color;
-  gap: 16rpx;
-  overflow-x: auto;
+  gap: 12rpx;
 }
 
 .filter-item {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
   flex-shrink: 0;
-  padding: 12rpx 20rpx;
+  max-width: 48%;
+  padding: 10rpx 16rpx;
   background: $bg-muted;
-  border-radius: 24rpx;
+  border: 1rpx solid transparent;
+  border-radius: $radius-sm;
   font-size: 22rpx;
   color: $text-secondary;
 
   &.active {
-    background: rgba(255, 107, 53, 0.12);
+    background: $primary-soft;
+    border-color: rgba(23, 107, 74, 0.18);
     color: $primary-color;
-    font-weight: 600;
+    font-weight: 650;
   }
+}
+
+.filter-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140rpx;
+}
+
+.filter-caret {
+  font-size: 18rpx;
+  line-height: 1;
+  opacity: 0.7;
+  flex-shrink: 0;
 }
 
 .recipe-scroll {
@@ -358,44 +410,38 @@ onMounted(async () => {
 .recipe-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24rpx;
+  gap: 16rpx;
 }
 
 .mini-card {
-  background: #fff;
-  border-radius: 16rpx;
+  background: $bg-card;
+  border-radius: $radius-md;
   overflow: hidden;
-  box-shadow: $shadow-sm;
+  border: 1rpx solid $border-color;
 }
 
 .cover {
-  height: 200rpx;
+  height: 176rpx;
   background: $bg-muted;
 }
 
-.cover-img,
-.cover-ph {
+.cover-img {
   width: 100%;
   height: 100%;
-}
-
-.cover-ph {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #ffe0d0, #ffc9a8);
-  font-size: 48rpx;
+  background: $bg-soft;
 }
 
 .info {
-  padding: 16rpx;
+  padding: 14rpx 14rpx 16rpx;
 }
 
 .name {
   display: block;
-  font-size: 28rpx;
-  font-weight: 600;
+  font-size: 26rpx;
+  font-weight: 650;
+  color: $text-primary;
   margin-bottom: 8rpx;
+  line-height: $line-tight;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -403,9 +449,17 @@ onMounted(async () => {
 
 .meta {
   display: flex;
-  gap: 16rpx;
-  font-size: 22rpx;
+  gap: 12rpx;
+  font-size: 20rpx;
   color: $text-light;
+  min-width: 0;
+}
+
+.meta-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 50%;
 }
 
 .empty,

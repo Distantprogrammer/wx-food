@@ -1,5 +1,5 @@
 <template>
-  <PageLayout title="分类管理" show-back background-color="#FFF8F0">
+  <PageLayout title="分类管理" show-back background-color="#F6F7F2">
     <view class="toolbar">
       <view class="add" @click="openEdit()">＋ 新增分类</view>
     </view>
@@ -148,7 +148,7 @@ onShow(load)
 .row {
   display: flex;
   align-items: center;
-  background: #fff;
+  background: #FFFFFF;
   border-radius: 20rpx;
   padding: 24rpx;
   margin-bottom: 16rpx;
@@ -161,7 +161,7 @@ onShow(load)
 .ops { display: flex; gap: 16rpx; }
 .op { font-size: 24rpx; color: $primary-color; }
 .op.danger { color: #e74c3c; }
-.empty { text-align: center; color: #999; padding: 48rpx; }
+.empty { text-align: center; color: #8A9590; padding: 48rpx; }
 
 .mask {
   position: fixed;
@@ -173,7 +173,7 @@ onShow(load)
 }
 .dialog {
   width: 100%;
-  background: #fff;
+  background: #FFFFFF;
   border-radius: 32rpx 32rpx 0 0;
   padding: 32rpx 32rpx calc(32rpx + env(safe-area-inset-bottom));
 }
@@ -198,5 +198,5 @@ onShow(load)
   border-radius: 40rpx;
   font-size: 28rpx;
 }
-.d-btn.ghost { background: #eee; color: #666; }
+.d-btn.ghost { background: #EEF1EB; color: #66736E; }
 </style>

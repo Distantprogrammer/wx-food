@@ -4,7 +4,11 @@
     :class="{ active: collected, disabled: isDisabled }"
     @click.stop="handleClick"
   >
-    <text class="collect-icon">{{ collected ? '★' : '☆' }}</text>
+    <image
+      class="collect-icon"
+      :src="collected ? '/static/icons/star-active.png' : '/static/icons/star.png'"
+      mode="aspectFit"
+    />
   </view>
 </template>
 
@@ -31,25 +35,23 @@ function handleClick() {
 @import '@/styles/variables.scss';
 
 .collect-btn {
-  width: 68rpx;
-  height: 68rpx;
+  width: $icon-touch;
+  height: $icon-touch;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(31, 45, 42, 0.08);
-  border-radius: $radius-md;
-  background: #fff;
-  color: #53615c;
-  transition: transform 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+  border: 1rpx solid $border-color;
+  border-radius: $radius-sm;
+  background: $bg-card;
+  transition: opacity $duration-fast $ease-out, background $duration-fast $ease-out;
 
   &.active {
-    color: $wechat;
-    background: $wechat-soft;
-    border-color: $border-green;
+    background: $warning-soft;
+    border-color: rgba(201, 138, 18, 0.22);
   }
 
   &:active:not(.disabled) {
-    transform: scale(0.94);
+    opacity: 0.82;
   }
 
   &.disabled {
@@ -58,7 +60,8 @@ function handleClick() {
 }
 
 .collect-icon {
-  font-size: 32rpx;
-  line-height: 1;
+  width: $icon-visual;
+  height: $icon-visual;
+  flex-shrink: 0;
 }
 </style>

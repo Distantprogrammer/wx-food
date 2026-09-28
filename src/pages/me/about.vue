@@ -1,8 +1,9 @@
 <template>
-  <PageLayout :title="notice.title || '公告'" show-back background-color="#FFF8F0">
+  <PageLayout :title="notice.title || '公告'" show-back background-color="#F6F7F2">
     <view v-if="loading" class="empty">加载中...</view>
-    <view v-else class="card">
+    <view v-else class="article">
       <text class="title">{{ notice.title || '关于 · 今天做什么菜' }}</text>
+      <view class="divider" />
       <rich-text v-if="notice.contentHtml" class="body" :nodes="notice.contentHtml" />
       <view v-else class="empty-inner">暂无公告内容</view>
     </view>
@@ -44,32 +45,38 @@ onShow(load)
 <style lang="scss" scoped>
 @import '@/styles/variables.scss';
 
-.card {
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 32rpx;
-  box-shadow: $shadow-md;
+.article {
+  padding: 8rpx 0 48rpx;
 }
 
 .title {
   display: block;
   font-size: 36rpx;
-  font-weight: 700;
-  margin-bottom: 24rpx;
+  font-weight: 750;
   color: $text-primary;
+  line-height: $line-tight;
+  word-break: break-word;
+}
+
+.divider {
+  height: 1rpx;
+  background: $border-color;
+  margin: 28rpx 0;
 }
 
 .body {
-  font-size: 28rpx;
-  color: #444;
-  line-height: 1.8;
+  display: block;
+  font-size: 30rpx;
+  color: $text-primary;
+  line-height: 1.85;
+  word-break: break-word;
 }
 
 .empty,
 .empty-inner {
   padding: 80rpx 32rpx;
   text-align: center;
-  color: #999;
+  color: $text-light;
   font-size: 26rpx;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <PageLayout title="导入种子数据" show-back background-color="#FFF8F0">
+  <PageLayout title="导入种子数据" show-back background-color="#F6F7F2">
     <view class="card">
       <text class="title">批量导入说明</text>
       <text class="desc">将把本地种子（菜谱 / 技巧 / 分类）写入云数据库。空库可首次导入；已有数据时仅管理员可更新覆盖。</text>
@@ -43,7 +43,7 @@ async function onImport() {
 @import '@/styles/variables.scss';
 
 .card {
-  background: #fff;
+  background: #FFFFFF;
   border-radius: 24rpx;
   padding: 32rpx;
   box-shadow: $shadow-sm;
@@ -74,12 +74,12 @@ async function onImport() {
 
 .btn {
   width: 100%;
-  height: 88rpx;
-  line-height: 88rpx;
+  height: 84rpx;
+  line-height: 84rpx;
   text-align: center;
-  background: linear-gradient(135deg, #ff6b35, #ff8c5a);
+  background: #176B4A;
   color: #fff;
-  border-radius: 44rpx;
+  border-radius: 12rpx;
   font-size: 30rpx;
   font-weight: 600;
   &[disabled] { opacity: 0.6; }

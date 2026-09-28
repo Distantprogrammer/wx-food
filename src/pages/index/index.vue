@@ -1,36 +1,33 @@
 ﻿<template>
   <PageLayout
-    :show-header="false"
     show-tab-bar
     active-tab="home"
-    background-color="#FFF8F0"
+    :header-style="{ background: '#F6F7F2', color: '#1F2D2A', borderBottom: '1rpx solid #E5E9E3' }"
+    background-color="#F6F7F2"
     :content-padding-x="0"
     :refresher-enabled="true"
     :refresher-triggered="refreshing"
     @refresherrefresh="onRefresh"
   >
-    <view class="home-header">
-      <view class="top">
-        <view class="greeting">
-          <text class="text">{{ greeting.text }}</text>
-          <text class="icon">{{ greeting.icon }}</text>
-        </view>
-        <view class="avatar" @click="goMe">
-          <image v-if="userInfo?.avatar" :src="userInfo.avatar" mode="aspectFill" class="avatar-img" />
-          <text v-else>😊</text>
-        </view>
+    <template #header-left>
+      <view class="greeting">
+        <text class="text">{{ greeting.text }}</text>
+        <text class="icon">{{ greeting.icon }}</text>
       </view>
-      <view class="meal-banner">
-        <text class="title">{{ greeting.meal }}推荐</text>
-        <text class="sub">为您精选 {{ greeting.meal }} 菜谱</text>
+    </template>
+    <view class="home-header">
+      <view class="meal-line">
+        <!-- <text class="meal-label">本餐推荐</text> -->
+        <!-- <text class="meal-title">{{ greeting.meal }}</text> -->
+        <text class="meal-sub">为您精选 {{ greeting.meal }} 菜谱</text>
       </view>
     </view>
 
-    <view class="section">
+    <view class="section section--rail">
       <scroll-view scroll-x class="h-scroll" :show-scrollbar="false">
         <view class="h-list">
           <view v-for="item in recommend" :key="item.id" class="h-item">
-            <RecipeCard :recipe="item" @click="goDetail" />
+            <RecipeCard :recipe="item" variant="rail" @click="goDetail" />
           </view>
         </view>
       </scroll-view>
@@ -38,27 +35,37 @@
 
     <view class="section">
       <view class="section-head">
-        <text class="section-title">🎲 随机选菜</text>
+        <text class="section-title">随机选菜</text>
       </view>
-      <view class="slot-card">
-        <view class="slot-window">
-          <text class="slot-emoji">{{ spinning ? '⏳' : '🎰' }}</text>
-          <text class="slot-name">{{ randomRecipe?.title || '点击下方按钮开始' }}</text>
+      <view class="random-card">
+        <view class="random-result" :class="{ loading: spinning, ready: !!randomRecipe && !spinning }">
+          <text class="random-label">{{ spinning ? '正在挑选…' : randomRecipe ? '今日建议' : '尚未选择' }}</text>
+          <text class="random-name">{{ randomRecipe?.title || '点击下方开始随机' }}</text>
+          <text v-if="randomRecipe && !spinning" class="random-meta">
+            {{ randomRecipe.difficultyText || '' }}
+            <text v-if="randomRecipe.calories">· {{ randomRecipe.calories }}kcal</text>
+          </text>
         </view>
-        <button class="spin-btn" :disabled="spinning" @click="spin">
-          {{ spinning ? '旋转中...' : '帮我随机' }}
-        </button>
+        <view class="random-actions">
+          <button v-if="randomRecipe && !spinning" class="btn-ghost" @click="goDetail(randomRecipe)">查看菜谱</button>
+          <button class="btn-primary" :class="{ busy: spinning }" :disabled="spinning" @click="spin">
+            {{ spinning ? '挑选中…' : randomRecipe ? '再随机一次' : '帮我随机' }}
+          </button>
+        </view>
       </view>
     </view>
 
     <view class="section">
       <view class="section-head">
-        <text class="section-title">🔥 热门菜谱</text>
-        <text class="section-more" @click="goCategory">查看更多 →</text>
+        <text class="section-title">热门菜谱</text>
+        <view class="section-more" @click="goCategory">
+          <text>查看更多</text>
+          <image class="more-arrow" src="/static/icons/chevron.png" mode="aspectFit" />
+        </view>
       </view>
       <view class="grid">
         <view v-for="item in hot" :key="item.id" class="grid-item">
-          <RecipeCard :recipe="item" @click="goDetail" />
+          <RecipeCard :recipe="item" variant="compact" @click="goDetail" />
         </view>
       </view>
     </view>
@@ -142,10 +149,6 @@ function goCategory() {
   uni.switchTab({ url: '/pages/category/index' })
 }
 
-function goMe() {
-  uni.switchTab({ url: '/pages/me/index' })
-}
-
 onMounted(load)
 </script>
 
@@ -153,91 +156,147 @@ onMounted(load)
 @import '@/styles/variables.scss';
 
 .home-header {
-  padding: 60rpx 40rpx 24rpx;
-  padding-top: calc(60rpx + env(safe-area-inset-top));
-  background: linear-gradient(180deg, rgba(255, 107, 53, 0.15), transparent);
-}
-
-.top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24rpx;
+  padding: 8rpx $page-padding-x 8rpx;
 }
 
 .greeting {
   display: flex;
   align-items: center;
   gap: 8rpx;
+  min-width: 0;
+  margin-bottom: 20rpx;
 }
 
 .greeting .text {
   font-size: 40rpx;
-  font-weight: 600;
+  font-weight: 700;
+  color: $text-primary;
+  line-height: $line-tight;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .greeting .icon {
-  font-size: 36rpx;
-}
-
-.avatar {
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 50%;
-  overflow: hidden;
-  background: #fff;
-  border: 4rpx solid #fff;
-  box-shadow: $shadow-md;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-size: 32rpx;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
-.avatar-img {
-  width: 100%;
-  height: 100%;
+.meal-line {
+  padding: 8rpx 0 12rpx;
 }
 
-.meal-banner {
-  background: linear-gradient(135deg, #ff6b35, #ff8c5a);
-  border-radius: 24rpx;
-  padding: 28rpx;
-  color: #fff;
-}
-
-.meal-banner .title {
+.meal-label {
   display: block;
-  font-size: 34rpx;
+  font-size: 22rpx;
   font-weight: 600;
+  color: $primary-color;
+  letter-spacing: 1rpx;
   margin-bottom: 6rpx;
 }
 
-.meal-banner .sub {
+.meal-title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 700;
+  color: $text-primary;
+  line-height: $line-tight;
+  margin-bottom: 6rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meal-sub {
+  display: block;
   font-size: 24rpx;
-  opacity: 0.9;
+  color: $text-secondary;
+  line-height: $line-base;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .section {
-  padding: 0 40rpx;
-  margin-bottom: 40rpx;
+  padding: 0 $page-padding-x;
+  margin-bottom: 36rpx;
+}
+
+.section--rail {
+  padding-right: 0;
 }
 
 .section-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20rpx;
+  margin-bottom: 18rpx;
+  gap: 16rpx;
 }
 
 .section-title {
-  font-size: 34rpx;
-  font-weight: 600;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: $text-primary;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .section-more {
+  display: flex;
+  align-items: center;
+  gap: 2rpx;
+  flex-shrink: 0;
   font-size: 24rpx;
-  color: $primary-color;
+  color: $text-secondary;
+}
+
+.more-arrow {
+  width: 24rpx;
+  height: 24rpx;
+  flex-shrink: 0;
+  margin-left: 2rpx;
+  opacity: 0.7;
+}
+
+.btn-ghost,
+.btn-primary {
+  flex: 1;
+  min-width: 0;
+  height: $btn-height;
+  line-height: $btn-height;
+  text-align: center;
+  font-size: $btn-font;
+  font-weight: 650;
+  border-radius: $btn-radius;
+}
+
+.btn-ghost {
+  background: $bg-muted;
+  color: $text-primary;
+  border: 1rpx solid $border-color;
+
+  &:active {
+    opacity: 0.86;
+  }
+}
+
+.btn-primary {
+  background: $primary-color;
+  color: $text-white;
+
+  &:active {
+    background: $primary-hover;
+  }
+
+  &.busy,
+  &[disabled] {
+    opacity: 0.72;
+  }
 }
 
 .h-scroll {
@@ -246,67 +305,87 @@ onMounted(load)
 
 .h-list {
   display: inline-flex;
-  gap: 20rpx;
+  gap: 16rpx;
+  padding-right: $page-padding-x;
 }
 
 .h-item {
-  width: 280rpx;
+  width: 300rpx;
   flex-shrink: 0;
 }
 
-.slot-card {
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 32rpx;
-  box-shadow: $shadow-md;
+.random-card {
+  background: $bg-card;
+  border: 1rpx solid $border-color;
+  border-radius: $radius-md;
+  padding: $card-padding;
 }
 
-.slot-window {
-  height: 180rpx;
+.random-result {
+  min-height: 160rpx;
+  padding: 28rpx 24rpx;
+  border-radius: $radius-sm;
   background: $bg-muted;
-  border-radius: 16rpx;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  gap: 12rpx;
-  margin-bottom: 24rpx;
+  gap: 8rpx;
+  margin-bottom: 20rpx;
+  transition: background $duration-base $ease-out;
+
+  &.ready {
+    background: $primary-soft;
+  }
+
+  &.loading {
+    opacity: 0.85;
+  }
 }
 
-.slot-emoji {
-  font-size: 48rpx;
-}
-
-.slot-name {
-  font-size: 28rpx;
-  font-weight: 500;
-}
-
-.spin-btn {
-  width: 100%;
-  height: 88rpx;
-  line-height: 88rpx;
-  text-align: center;
-  background: linear-gradient(135deg, #ff6b35, #ff8c5a);
-  color: #fff;
-  border-radius: 44rpx;
-  font-size: 30rpx;
+.random-label {
+  font-size: 22rpx;
   font-weight: 600;
+  color: $text-light;
+}
+
+.random-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: $text-primary;
+  line-height: $line-tight;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+}
+
+.random-meta {
+  font-size: 22rpx;
+  color: $text-secondary;
+}
+
+.random-actions {
+  display: flex;
+  gap: 16rpx;
 }
 
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20rpx;
+  gap: $list-gap;
 }
 
 .seed-tip {
-  margin: 0 40rpx 40rpx;
-  padding: 24rpx;
-  background: rgba(255, 107, 53, 0.1);
+  margin: 0 $page-padding-x 40rpx;
+  padding: 22rpx 24rpx;
+  background: $primary-soft;
   color: $primary-color;
-  border-radius: 16rpx;
+  border-radius: $radius-sm;
+  border: 1rpx solid rgba(23, 107, 74, 0.16);
   text-align: center;
   font-size: 26rpx;
+  line-height: $line-base;
 }
 </style>

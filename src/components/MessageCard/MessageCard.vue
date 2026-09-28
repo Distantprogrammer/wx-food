@@ -105,7 +105,7 @@ function handleClick() {
   align-items: center;
   justify-content: center;
   border-radius: $radius-md;
-  background: linear-gradient(135deg, #dff5e8, #fff7db);
+  background: $primary-soft;
   color: $wechat-dark;
   font-size: 26rpx;
   font-weight: 900;

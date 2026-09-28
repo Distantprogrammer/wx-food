@@ -12,29 +12,29 @@ export const TAB_BAR_LIST = [
     key: 'home',
     text: '首页',
     pagePath: '/pages/index/index',
-    icon: '🏠',
-    activeIcon: '🏠'
+    icon: '/static/tab/home.png',
+    activeIcon: '/static/tab/home-active.png'
   },
   {
     key: 'tips',
     text: '烹饪技巧',
     pagePath: '/pages/tips/index',
-    icon: '📖',
-    activeIcon: '📖'
+    icon: '/static/tab/cook.png',
+    activeIcon: '/static/tab/cook-active.png'
   },
   {
     key: 'category',
     text: '分类',
     pagePath: '/pages/category/index',
-    icon: '📂',
-    activeIcon: '📂'
+    icon: '/static/tab/category.png',
+    activeIcon: '/static/tab/category-active.png'
   },
   {
     key: 'me',
     text: '我的',
     pagePath: '/pages/me/index',
-    icon: '👤',
-    activeIcon: '👤'
+    icon: '/static/tab/mine.png',
+    activeIcon: '/static/tab/mine-active.png'
   }
 ]
 

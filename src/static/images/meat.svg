@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="肉菜默认封面">
+  <rect width="1200" height="900" fill="#F1F4EE"/>
+  <path d="M0 700C220 640 374 765 600 704s392-15 600-70v266H0Z" fill="#DCE7DB"/>
+  <ellipse cx="602" cy="490" rx="315" ry="190" fill="#176B4A"/>
+  <ellipse cx="602" cy="468" rx="285" ry="167" fill="#FDFDF9"/>
+  <ellipse cx="602" cy="470" rx="236" ry="125" fill="#9E3F32"/>
+  <path d="M455 480c40-79 127-117 196-84 59 28 93 94 48 142-49 52-180 55-244 2Z" fill="#D86A4D"/>
+  <path d="M669 431c55-23 104 9 112 53 9 52-42 90-104 74-45-12-58-48-8-127Z" fill="#BE4D3E"/>
+  <path d="M533 390c31 30 46 71 25 105-20 31-75 35-111 7-36-29-40-74-7-108 25-25 67-25 93-4Z" fill="#D97450"/>
+  <g fill="#E7B23A"><circle cx="468" cy="412" r="17"/><circle cx="733" cy="505" r="15"/><circle cx="629" cy="557" r="13"/><circle cx="574" cy="419" r="12"/></g>
+  <g stroke="#4B8A60" stroke-width="22" stroke-linecap="round"><path d="M390 370l-55-72"/><path d="M778 390l71-65"/><path d="M819 545l79 23"/></g>
+  <g fill="#7CAB67"><ellipse cx="348" cy="274" rx="34" ry="19" transform="rotate(35 348 274)"/><ellipse cx="850" cy="319" rx="37" ry="19" transform="rotate(-31 850 319)"/><ellipse cx="899" cy="572" rx="38" ry="20" transform="rotate(19 899 572)"/></g>
+</svg>

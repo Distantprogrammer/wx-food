@@ -1,8 +1,10 @@
 ﻿<template>
-  <PageLayout :title="title" show-back background-color="#FFF8F0">
+  <PageLayout :title="title" show-back background-color="#F6F7F2">
     <view v-if="!loading && !list.length" class="empty">暂无数据</view>
-    <view v-for="item in list" :key="item.id" class="item">
-      <RecipeCard :recipe="item" @click="goDetail" />
+    <view class="grid">
+      <view v-for="item in list" :key="item.id" class="grid-item">
+        <RecipeCard :recipe="item" variant="compact" @click="goDetail" />
+      </view>
     </view>
     <view v-if="hasMore" class="more" @click="loadMore">加载更多</view>
   </PageLayout>
@@ -66,11 +68,19 @@ onLoad((query) => {
 </script>
 
 <style lang="scss" scoped>
-.item { margin-bottom: 24rpx; }
-.empty, .more {
+@import '@/styles/variables.scss';
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $list-gap;
+}
+
+.empty,
+.more {
   text-align: center;
   padding: 40rpx;
-  color: #999;
+  color: $text-light;
   font-size: 26rpx;
 }
 </style>

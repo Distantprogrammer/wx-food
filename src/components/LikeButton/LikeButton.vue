@@ -4,7 +4,11 @@
     :class="{ active: liked, disabled: isDisabled }"
     @click.stop="handleClick"
   >
-    <text class="like-icon">{{ liked ? '♥' : '♡' }}</text>
+    <image
+      class="like-icon"
+      :src="liked ? '/static/icons/heart-active.png' : '/static/icons/heart.png'"
+      mode="aspectFit"
+    />
   </view>
 </template>
 
@@ -31,25 +35,23 @@ function handleClick() {
 @import '@/styles/variables.scss';
 
 .like-btn {
-  width: 68rpx;
-  height: 68rpx;
+  width: $icon-touch;
+  height: $icon-touch;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(31, 45, 42, 0.08);
-  border-radius: $radius-md;
-  background: #fff;
-  color: #53615c;
-  transition: transform 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+  border: 1rpx solid $border-color;
+  border-radius: $radius-sm;
+  background: $bg-card;
+  transition: opacity $duration-fast $ease-out, background $duration-fast $ease-out;
 
   &.active {
-    color: $wechat;
-    background: $wechat-soft;
-    border-color: $border-green;
+    background: $primary-soft;
+    border-color: rgba(23, 107, 74, 0.18);
   }
 
   &:active:not(.disabled) {
-    transform: scale(0.94);
+    opacity: 0.82;
   }
 
   &.disabled {
@@ -58,7 +60,8 @@ function handleClick() {
 }
 
 .like-icon {
-  font-size: 32rpx;
-  line-height: 1;
+  width: $icon-visual;
+  height: $icon-visual;
+  flex-shrink: 0;
 }
 </style>

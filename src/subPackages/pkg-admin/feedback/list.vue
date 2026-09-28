@@ -2,7 +2,7 @@
   <PageLayout
     title="用户反馈"
     show-back
-    background-color="#FFF8F0"
+    background-color="#F6F7F2"
     :refresher-enabled="true"
     :refresher-triggered="refreshing"
     @refresherrefresh="onRefresh"
@@ -111,7 +111,7 @@ onShow(() => load(true))
 @import '@/styles/variables.scss';
 
 .card {
-  background: #fff;
+  background: #FFFFFF;
   border-radius: 20rpx;
   padding: 24rpx;
   margin-bottom: 16rpx;
@@ -166,7 +166,7 @@ onShow(() => load(true))
 .empty,
 .more {
   text-align: center;
-  color: #999;
+  color: #8A9590;
   padding: 32rpx;
   font-size: 24rpx;
 }

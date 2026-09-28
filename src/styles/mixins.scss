@@ -43,45 +43,76 @@
 
 @mixin card-base {
   background: $bg-card;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-md;
-}
-
-@mixin card-dark {
-  background: $bg-card-dark;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-lg;
+  border-radius: $radius-md;
+  border: 1rpx solid $border-color;
+  box-shadow: $shadow-sm;
 }
 
 @mixin btn-base {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: $radius-round;
-  transition: all 0.3s ease;
-  font-size: $font-size-base;
-  
+  height: 84rpx;
+  padding: 0 28rpx;
+  border-radius: $radius-sm;
+  font-size: 28rpx;
+  font-weight: 650;
+  line-height: 1.2;
+  transition: opacity $duration-fast $ease-out, background $duration-fast $ease-out;
+
   &:active {
-    transform: scale(0.96);
-    opacity: 0.9;
+    opacity: 0.86;
+  }
+
+  &[disabled],
+  &.disabled,
+  &.busy {
+    opacity: 0.72;
   }
 }
 
 @mixin btn-primary {
   @include btn-base;
-  background: linear-gradient(135deg, $primary-color 0%, $primary-light 100%);
+  background: $primary-color;
   color: $text-white;
-  
+
   &:active {
-    background: linear-gradient(135deg, $primary-dark 0%, $primary-color 100%);
+    background: $primary-hover;
+    opacity: 1;
   }
 }
 
 @mixin btn-secondary {
   @include btn-base;
-  background: $bg-card;
+  background: $bg-muted;
   color: $text-primary;
-  border: 2rpx solid $border-color;
+  border: 1rpx solid $border-color;
+}
+
+@mixin btn-ghost {
+  @include btn-secondary;
+}
+
+@mixin btn-sm {
+  height: 60rpx;
+  padding: 0 20rpx;
+  font-size: 24rpx;
+  border-radius: $radius-sm;
+}
+
+@mixin icon-box($size: 64rpx) {
+  flex-shrink: 0;
+  width: $size;
+  height: $size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin icon-img($size: 34rpx) {
+  flex-shrink: 0;
+  width: $size;
+  height: $size;
 }
 
 @mixin fade-in($duration: 0.3s, $delay: 0s) {
@@ -97,66 +128,8 @@
   }
 }
 
-@mixin slide-up($duration: 0.3s, $delay: 0s) {
-  animation: slideUp $duration ease $delay forwards;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@mixin slide-down($duration: 0.3s, $delay: 0s) {
-  animation: slideDown $duration ease $delay forwards;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@mixin slide-left($duration: 0.3s, $delay: 0s) {
-  animation: slideLeft $duration ease $delay forwards;
-}
-
-@keyframes slideLeft {
-  from {
-    opacity: 0;
-    transform: translateX(20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@mixin pulse($duration: 2s) {
-  animation: pulse $duration ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
-}
-
 @mixin skeleton {
-  background: linear-gradient(90deg, #F0F0F0 25%, #E0E0E0 50%, #F0F0F0 75%);
+  background: linear-gradient(90deg, $bg-muted 25%, $bg-soft 50%, $bg-muted 75%);
   background-size: 200% 100%;
   animation: skeletonLoading 1.5s ease-in-out infinite;
 }

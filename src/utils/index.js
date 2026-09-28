@@ -116,6 +116,8 @@ export async function getCoverTempUrlBatch(urls) {
   return map
 }
 
+export { getRecipePlaceholder, DEFAULT_RECIPE_PLACEHOLDER } from './recipePlaceholder'
+
 let currentTab = ''
 
 export function setCurrentTab(path) {

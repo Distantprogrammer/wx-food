@@ -66,10 +66,10 @@ const roleText = computed(() => {
   gap: 28rpx;
   padding: 32rpx;
   border-radius: $radius-md;
-  background: linear-gradient(135deg, #203e35, #07c160);
+  background: $primary-color;
   color: #fff;
   overflow: hidden;
-  box-shadow: 0 24rpx 56rpx rgba(7, 92, 55, 0.18);
+  box-shadow: $shadow-md;
 }
 
 .profile-card::after {

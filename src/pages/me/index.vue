@@ -1,46 +1,66 @@
 ﻿<template>
   <PageLayout
-    :show-header="false"
+    title="我的"
     show-tab-bar
     active-tab="me"
-    background-color="#FFF8F0"
+    :header-style="{ background: '#F6F7F2', color: '#1F2D2A' }"
+    background-color="#F6F7F2"
     :content-padding-x="0"
   >
-    <view class="header-bg" />
     <view class="user-section">
       <view class="user-card">
-        <view class="avatar">
-          <image v-if="userInfo?.avatar" :src="userInfo.avatar" mode="aspectFill" class="avatar-img" />
-          <text v-else>😊</text>
-        </view>
-        <view class="info">
-          <text class="name">{{ userInfo?.nickname || '美食家' }}</text>
-          <text class="desc">云开发已静默登录</text>
+        <view class="user-row">
+          <view class="avatar">
+            <image v-if="userInfo?.avatar" :src="userInfo.avatar" mode="aspectFill" class="avatar-img" />
+            <text v-else class="avatar-fallback">我</text>
+          </view>
+          <view class="info">
+            <text class="name">{{ userInfo?.nickname || '美食家' }}</text>
+            <text class="desc">{{ roleLabel }}</text>
+          </view>
+          <button class="edit-btn" @click="openEditName">修改名称</button>
         </view>
       </view>
 
       <view class="stats-card">
-        <view class="stat" @click="goList('history')"><text class="val">{{ stats.history }}</text><text class="lab">历史查看</text></view>
+        <view class="stat" @click="goList('history')">
+          <text class="val">{{ stats.history }}</text>
+          <text class="lab">历史查看</text>
+        </view>
         <view class="divider" />
-        <view class="stat" @click="goList('likes')"><text class="val">{{ stats.liked }}</text><text class="lab">我喜欢的</text></view>
+        <view class="stat" @click="goList('likes')">
+          <text class="val">{{ stats.liked }}</text>
+          <text class="lab">我喜欢的</text>
+        </view>
         <view class="divider" />
-        <view class="stat" @click="goList('favorites')"><text class="val">{{ stats.favorite }}</text><text class="lab">我的收藏</text></view>
+        <view class="stat" @click="goList('favorites')">
+          <text class="val">{{ stats.favorite }}</text>
+          <text class="lab">我的收藏</text>
+        </view>
         <view class="divider" />
-        <view class="stat" @click="goList('cooked')"><text class="val">{{ stats.cooked }}</text><text class="lab">做过的菜</text></view>
+        <view class="stat" @click="goList('cooked')">
+          <text class="val">{{ stats.cooked }}</text>
+          <text class="lab">做过的菜</text>
+        </view>
       </view>
     </view>
 
     <view class="content">
       <view class="section-card">
         <view class="head">
-          <text>📚 我的收藏</text>
-          <text class="more" @click="goList('favorites')">查看全部 →</text>
+          <text class="head-title">我的收藏</text>
+          <view class="more" @click="goList('favorites')">
+            <text>查看全部</text>
+            <image class="more-arrow" src="/static/icons/chevron.png" mode="aspectFit" />
+          </view>
         </view>
         <view v-if="!favorites.length" class="empty">暂无收藏</view>
         <scroll-view v-else scroll-x class="mini-scroll" :show-scrollbar="false">
           <view class="mini-list">
             <view v-for="item in favorites" :key="item.id" class="mini" @click="goDetail(item)">
-              <view class="mini-cover">{{ item.title?.slice(0, 1) }}</view>
+              <view class="mini-cover">
+                <image :src="coverMap[item.id] || placeholderOf(item)" mode="aspectFill" class="mini-img" />
+              </view>
               <text class="mini-name">{{ item.title }}</text>
             </view>
           </view>
@@ -49,14 +69,19 @@
 
       <view class="section-card">
         <view class="head">
-          <text>🔄 最近浏览</text>
-          <text class="more" @click="goList('history')">查看全部 →</text>
+          <text class="head-title">最近浏览</text>
+          <view class="more" @click="goList('history')">
+            <text>查看全部</text>
+            <image class="more-arrow" src="/static/icons/chevron.png" mode="aspectFit" />
+          </view>
         </view>
         <view v-if="!history.length" class="empty">暂无浏览</view>
         <scroll-view v-else scroll-x class="mini-scroll" :show-scrollbar="false">
           <view class="mini-list">
             <view v-for="item in history" :key="item.id" class="mini" @click="goDetail(item)">
-              <view class="mini-cover">{{ item.title?.slice(0, 1) }}</view>
+              <view class="mini-cover">
+                <image :src="coverMap[item.id] || placeholderOf(item)" mode="aspectFill" class="mini-img" />
+              </view>
               <text class="mini-name">{{ item.title }}</text>
             </view>
           </view>
@@ -65,41 +90,81 @@
 
       <view class="menu-card">
         <view class="menu-item" @click="goFeedback">
-          <text class="mi">💬</text>
+          <text class="mi">反馈</text>
           <text class="ml">意见反馈</text>
-          <text class="ma">→</text>
+          <image class="ma" src="/static/icons/chevron.png" mode="aspectFit" />
         </view>
         <view v-if="isAdmin" class="menu-item" @click="goAdmin">
-          <text class="mi">🛠️</text>
+          <text class="mi">管理</text>
           <text class="ml">内容管理</text>
-          <text class="ma">→</text>
+          <image class="ma" src="/static/icons/chevron.png" mode="aspectFit" />
         </view>
         <view class="menu-item" @click="goAbout">
-          <text class="mi">ℹ️</text>
+          <text class="mi">关于</text>
           <text class="ml">关于 · 今天做什么菜</text>
-          <text class="ma">→</text>
+          <image class="ma" src="/static/icons/chevron.png" mode="aspectFit" />
         </view>
       </view>
     </view>
+
+    <template #overlay>
+      <view v-if="editVisible" class="edit-mask" @click="editVisible = false">
+        <view class="edit-sheet" @click.stop>
+          <view class="sheet-handle" />
+          <text class="sheet-title">修改名称</text>
+          <input
+            v-model="editNickname"
+            class="edit-input"
+            placeholder="请输入昵称"
+            maxlength="20"
+          />
+          <view class="sheet-actions">
+            <button class="ghost-button" @click="editVisible = false">取消</button>
+            <button class="save-button" @click="handleUpdateName">保存</button>
+          </view>
+        </view>
+      </view>
+    </template>
   </PageLayout>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import PageLayout from '@/components/page-layout/PageLayout.vue'
 import { useUserStore } from '@/store/user'
 import { useTabPage } from '@/composables/useTabPage'
 import { getUserStats, getUserPreview } from '@/services/userRecipe'
+import { getCoverTempUrlBatch } from '@/utils/index'
+import { getRecipePlaceholder } from '@/utils/recipePlaceholder'
 
 useTabPage('me')
 
 const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)
 const isAdmin = computed(() => userStore.isAdmin)
+const roleLabel = computed(() => (userStore.isAdmin ? '管理员' : '用户'))
 const stats = ref({ history: 0, liked: 0, favorite: 0, cooked: 0 })
 const favorites = ref([])
 const history = ref([])
+const coverMap = ref({})
+const editVisible = ref(false)
+const editNickname = ref('')
+
+function placeholderOf(item) {
+  return getRecipePlaceholder(item?.categorySlug)
+}
+
+async function resolveCovers(rows) {
+  const urls = (rows || []).map(r => r.coverImage).filter(Boolean)
+  const byUrl = urls.length ? await getCoverTempUrlBatch(urls) : {}
+  const next = { ...coverMap.value }
+  ;(rows || []).forEach(item => {
+    const u = item.coverImage ? byUrl[item.coverImage] : ''
+    next[item.id] = u || getRecipePlaceholder(item.categorySlug)
+  })
+  coverMap.value = next
+}
 
 async function load() {
   try {
@@ -108,6 +173,8 @@ async function load() {
     if (p.code === 200) {
       favorites.value = p.data?.favorites || []
       history.value = p.data?.history || []
+      coverMap.value = {}
+      resolveCovers([...(favorites.value || []), ...(history.value || [])])
     }
   } catch (e) {
     console.error(e)
@@ -139,140 +206,387 @@ function goAdmin() {
   uni.navigateTo({ url: '/subPackages/pkg-admin/index/index' })
 }
 
+function openEditName() {
+  if (!userStore.isLogin) {
+    uni.showToast({ title: '请先登录', icon: 'none' })
+    return
+  }
+  editVisible.value = true
+}
+
+async function handleUpdateName() {
+  const nickname = editNickname.value.trim()
+  if (!nickname) {
+    uni.showToast({ title: '昵称不能为空', icon: 'none' })
+    return
+  }
+  try {
+    await userStore.updateProfile({ nickname })
+    uni.showToast({ title: '更新成功', icon: 'success' })
+    editVisible.value = false
+  } catch (e) {
+    uni.showToast({ title: e.message || '更新失败', icon: 'none' })
+  }
+}
+
+watch(editVisible, val => {
+  if (val) {
+    editNickname.value = userStore.userInfo?.nickname || ''
+  }
+})
+
 onShow(load)
 </script>
 
 <style lang="scss" scoped>
 @import '@/styles/variables.scss';
 
-.header-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 280rpx;
-  background: linear-gradient(180deg, rgba(255, 107, 53, 0.55), rgba(255, 248, 240, 0.2));
-  z-index: 0;
-}
-
 .user-section {
-  position: relative;
-  z-index: 1;
-  padding: 80rpx 40rpx 16rpx;
-  padding-top: calc(80rpx + env(safe-area-inset-top));
+  padding: 10rpx $page-padding-x 8rpx;
 }
 
 .user-card {
+  background: $bg-card;
+  border-radius: $radius-md;
+  padding: 24rpx;
+  border: 1rpx solid $border-color;
+}
+
+.user-row {
   display: flex;
   align-items: center;
   gap: 20rpx;
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 28rpx;
-  box-shadow: $shadow-lg;
+}
+
+.edit-btn {
+  flex-shrink: 0;
+  height: 56rpx;
+  padding: 0 24rpx;
+  margin: 0;
+  border: 1rpx solid $border-color;
+  border-radius: $radius-sm;
+  background: $bg-muted;
+  color: $text-primary;
+  font-size: 22rpx;
+  font-weight: 700;
+  line-height: 56rpx;
+
+  &::after {
+    border: none;
+  }
 }
 
 .avatar {
-  width: 110rpx;
-  height: 110rpx;
+  width: 96rpx;
+  height: 96rpx;
   border-radius: 50%;
-  border: 4rpx solid $primary-color;
+  border: 2rpx solid $border-color;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48rpx;
-  background: $bg-color;
+  background: $bg-muted;
+  flex-shrink: 0;
 }
 
-.avatar-img { width: 100%; height: 100%; }
+.avatar-img {
+  width: 100%;
+  height: 100%;
+}
 
-.info { flex: 1; }
-.name { display: block; font-size: 34rpx; font-weight: 600; }
-.desc { font-size: 24rpx; color: $text-light; }
+.avatar-fallback {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: $primary-color;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 700;
+  color: $text-primary;
+  line-height: $line-tight;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desc {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: $text-light;
+}
 
 .stats-card {
   display: flex;
-  margin-top: 20rpx;
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 28rpx 12rpx;
-  box-shadow: $shadow-md;
+  margin-top: 16rpx;
+  background: $bg-card;
+  border-radius: $radius-md;
+  padding: 24rpx 8rpx;
+  border: 1rpx solid $border-color;
 }
 
 .stat {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6rpx;
+  padding: 0 4rpx;
 }
 
-.val { font-size: 36rpx; font-weight: 700; color: $primary-color; }
-.lab { font-size: 22rpx; color: $text-light; }
-.divider { width: 1rpx; background: $border-color; }
+.val {
+  font-size: 34rpx;
+  font-weight: 750;
+  color: $text-primary;
+  line-height: 1.2;
+}
 
-.content { padding: 8rpx 40rpx 40rpx; position: relative; z-index: 1; }
+.lab {
+  font-size: 20rpx;
+  color: $text-light;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.divider {
+  width: 1rpx;
+  background: $border-color;
+  align-self: stretch;
+  margin: 8rpx 0;
+}
+
+.content {
+  padding: 16rpx $page-padding-x 40rpx;
+}
 
 .section-card {
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 24rpx;
-  margin-bottom: 20rpx;
-  box-shadow: $shadow-sm;
+  background: $bg-card;
+  border-radius: $radius-md;
+  padding: 22rpx 20rpx;
+  margin-bottom: 16rpx;
+  border: 1rpx solid $border-color;
 }
 
 .head {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 16rpx;
-  font-size: 30rpx;
-  font-weight: 600;
+  gap: 12rpx;
 }
 
-.more { font-size: 24rpx; color: $primary-color; font-weight: 400; }
+.head-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: $text-primary;
+}
 
-.empty { text-align: center; color: $text-light; font-size: 24rpx; padding: 24rpx; }
+.more {
+  display: flex;
+  align-items: center;
+  gap: 2rpx;
+  font-size: 24rpx;
+  color: $text-secondary;
+  flex-shrink: 0;
+}
 
-.mini-scroll { white-space: nowrap; }
-.mini-list { display: inline-flex; gap: 16rpx; }
-.mini { width: 140rpx; text-align: center; }
+.more-arrow {
+  width: 24rpx;
+  height: 24rpx;
+  flex-shrink: 0;
+  opacity: 0.55;
+}
+
+.empty {
+  text-align: center;
+  color: $text-light;
+  font-size: 24rpx;
+  padding: 24rpx;
+}
+
+.mini-scroll {
+  white-space: nowrap;
+}
+
+.mini-list {
+  display: inline-flex;
+  gap: 16rpx;
+}
+
+.mini {
+  width: 140rpx;
+}
+
 .mini-cover {
   width: 140rpx;
   height: 140rpx;
-  border-radius: 16rpx;
-  background: linear-gradient(135deg, #ffe0d0, #ffc9a8);
+  border-radius: $radius-sm;
+  background: $bg-soft;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40rpx;
-  font-weight: 700;
-  color: #fff;
   margin-bottom: 8rpx;
+  overflow: hidden;
+  border: 1rpx solid $border-color;
 }
+
+.mini-img {
+  width: 100%;
+  height: 100%;
+}
+
 .mini-name {
   display: block;
   font-size: 22rpx;
+  color: $text-primary;
+  line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .menu-card {
-  background: #fff;
-  border-radius: 24rpx;
+  background: $bg-card;
+  border-radius: $radius-md;
   overflow: hidden;
-  box-shadow: $shadow-sm;
+  border: 1rpx solid $border-color;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 28rpx 24rpx;
+  padding: 28rpx 22rpx;
   border-bottom: 1rpx solid $border-color;
-  &:last-child { border-bottom: none; }
+
+  &:last-child {
+    border-bottom: none;
+  }
 }
-.mi { font-size: 32rpx; margin-right: 16rpx; }
-.ml { flex: 1; font-size: 28rpx; }
-.ma { color: #ccc; }
+
+.mi {
+  width: 64rpx;
+  height: 40rpx;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  font-weight: 650;
+  color: $primary-color;
+  background: $primary-soft;
+  border-radius: $radius-sm;
+}
+
+.ml {
+  flex: 1;
+  min-width: 0;
+  font-size: 28rpx;
+  color: $text-primary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ma {
+  width: 24rpx;
+  height: 24rpx;
+  flex-shrink: 0;
+  opacity: 0.55;
+}
+
+.edit-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  background: rgba(31, 45, 42, 0.28);
+  pointer-events: auto;
+}
+
+.edit-sheet {
+  position: absolute;
+  left: 24rpx;
+  right: 24rpx;
+  bottom: 176rpx;
+  padding: 28rpx;
+  border: 1rpx solid $border-color;
+  border-radius: $radius-md;
+  background: $bg-card;
+  box-shadow: $shadow-lg;
+}
+
+.sheet-handle {
+  width: 88rpx;
+  height: 8rpx;
+  margin: 0 auto 24rpx;
+  border-radius: 8rpx;
+  background: $bg-muted;
+}
+
+.sheet-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 750;
+  color: $text-primary;
+  margin-bottom: 20rpx;
+}
+
+.edit-input {
+  width: 100%;
+  height: 80rpx;
+  padding: 0 20rpx;
+  margin-bottom: 16rpx;
+  border: 1rpx solid $border-color;
+  border-radius: $radius-md;
+  background: $bg-color;
+  box-sizing: border-box;
+  font-size: 28rpx;
+  color: $text-primary;
+}
+
+.sheet-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.save-button,
+.ghost-button {
+  min-width: 152rpx;
+  height: 68rpx;
+  padding: 0 24rpx;
+  margin: 0;
+  border-radius: $radius-md;
+  font-size: 24rpx;
+  font-weight: 700;
+  line-height: 68rpx;
+
+  &::after {
+    border: none;
+  }
+}
+
+.save-button {
+  border: 1rpx solid $primary-soft;
+  background: $primary-soft;
+  color: $primary-color;
+}
+
+.ghost-button {
+  border: 1rpx solid $border-color;
+  background: #fff;
+  color: $text-secondary;
+}
 </style>

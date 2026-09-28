@@ -6,9 +6,15 @@
         :key="item.key"
         class="tab-item"
         :class="{ active: activeKey === item.key }"
+        hover-class="tab-item--pressed"
+        :hover-stay-time="100"
         @click="handleTabClick(item)"
       >
-        <text class="tab-icon">{{ activeKey === item.key ? item.activeIcon : item.icon }}</text>
+        <image
+          class="tab-icon"
+          :src="activeKey === item.key ? item.activeIcon : item.icon"
+          mode="aspectFit"
+        />
         <text class="tab-text">{{ item.text }}</text>
       </view>
     </view>
@@ -51,9 +57,9 @@ function handleTabClick(item) {
   right: 0;
   bottom: 0;
   z-index: $z-index-tabbar;
-  background: #ffffff;
-  border-radius: 32rpx 32rpx 0 0;
-  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.98);
+  border-top: 1rpx solid $border-color;
+  box-shadow: 0 -2rpx 12rpx rgba(31, 45, 42, 0.04);
   padding-bottom: constant(safe-area-inset-bottom);
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -62,7 +68,7 @@ function handleTabClick(item) {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  height: 120rpx;
+  height: 100rpx;
 }
 
 .tab-item {
@@ -71,22 +77,37 @@ function handleTabClick(item) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4rpx;
+  gap: 6rpx;
+  min-width: 0;
   color: $text-light;
-  font-size: 20rpx;
+  transition: color $duration-fast $ease-out;
 
   &.active {
     color: $primary-color;
-    font-weight: 600;
   }
 }
 
+.tab-item--pressed {
+  opacity: 0.72;
+}
+
 .tab-icon {
-  font-size: 40rpx;
-  line-height: 1;
+  width: $tab-icon-size;
+  height: $tab-icon-size;
+  flex-shrink: 0;
 }
 
 .tab-text {
   font-size: 20rpx;
+  font-weight: 500;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-item.active .tab-text {
+  font-weight: 650;
 }
 </style>

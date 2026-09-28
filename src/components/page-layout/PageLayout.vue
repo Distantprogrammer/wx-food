@@ -5,6 +5,7 @@
       :title="title"
       :subtitle="subtitle"
       :theme="headerTheme"
+      :transparent="transparentHeader"
       :show-back="showBack"
       :show-home="showHome"
       :header-style="headerStyle"
@@ -91,13 +92,16 @@ const props = defineProps({
   showTabBar: { type: Boolean, default: false },
   activeTab: { type: String, default: 'home' },
   headerStyle: { type: Object, default: () => ({}) },
-  backgroundColor: { type: String, default: '#FFF8F0' },
+  /** 透明顶栏，用于封面图上的详情页 */
+  transparentHeader: { type: Boolean, default: false },
+  backgroundColor: { type: String, default: '#F6F7F2' },
   contentPaddingX: { type: Number, default: 32 },
   extraBottomPadding: { type: Number, default: 40 },
   contentStyle: { type: Object, default: () => ({}) },
   headerContentHeight: { type: Number, default: 0 },
   footerHeight: { type: Number, default: 120 },
   enableBackToTop: { type: Boolean, default: true },
+  contentPaddingTop: { type: Number, default: 20 },
   showScrollbar: { type: Boolean, default: false },
   /** 为 false 时外层不用 scroll-view，适合内部自管滚动/底部固定布局 */
   enableScroll: { type: Boolean, default: true },
@@ -141,7 +145,8 @@ const layoutStyle = computed(() => ({
 
 const bodyStyle = computed(() =>
   getScrollViewStyle({
-    showHeader: props.showHeader,
+    // 透明顶栏时内容从屏幕顶部开始，封面可铺满并被返回按钮叠在上方
+    showHeader: props.showHeader && !props.transparentHeader,
     showTabBar: props.showTabBar,
     // 高度已在容器扣除 footer；内容区再用 padding 留白，避免双倍扣减
     extraBottomPadding: 0,
@@ -152,7 +157,11 @@ const bodyStyle = computed(() =>
 )
 
 const mergedContentStyle = computed(() => {
+  const topPad = props.transparentHeader
+    ? (props.contentPaddingTop === 20 ? 0 : props.contentPaddingTop)
+    : props.contentPaddingTop
   const style = {
+    paddingTop: `${rpx2px(topPad)}px`,
     paddingLeft: `${rpx2px(props.contentPaddingX)}px`,
     paddingRight: `${rpx2px(props.contentPaddingX)}px`,
     ...props.contentStyle

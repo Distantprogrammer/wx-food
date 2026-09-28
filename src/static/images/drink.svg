@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="饮品默认封面">
+  <rect width="1200" height="900" fill="#F1F4EE"/>
+  <path d="M0 731c204-74 376 26 600-26 237-55 404 30 600-50v245H0Z" fill="#DCE7DB"/>
+  <ellipse cx="600" cy="565" rx="290" ry="104" fill="#176B4A"/>
+  <path d="M479 303h242l-24 343c-4 59-211 59-215 0Z" fill="#FDFDF9" stroke="#176B4A" stroke-width="20"/>
+  <path d="M497 425h206l-15 211c-4 44-171 44-176 0Z" fill="#D89A48"/>
+  <path d="M516 439h168l-5 64H520Z" fill="#F2BE59"/>
+  <g fill="#FDFDF9" opacity=".9"><circle cx="560" cy="479" r="24"/><circle cx="631" cy="530" r="25"/><circle cx="585" cy="590" r="22"/></g>
+  <path d="M682 257 605 425" stroke="#5E9D5A" stroke-width="21" stroke-linecap="round"/>
+  <path d="M472 377c-91-3-104 105-45 137 47 26 79-14 70-57" fill="none" stroke="#176B4A" stroke-width="22" stroke-linecap="round"/>
+  <g fill="#6AAA61"><ellipse cx="414" cy="387" rx="47" ry="23" transform="rotate(-27 414 387)"/><ellipse cx="780" cy="338" rx="46" ry="22" transform="rotate(29 780 338)"/></g>
+</svg>

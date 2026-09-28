@@ -1,60 +1,74 @@
 <template>
-  <PageLayout title="菜谱详情" show-back background-color="#FFF8F0" :footer-height="140" :content-padding-x="0">
+  <PageLayout
+    title=""
+    show-back
+    transparent-header
+    background-color="#F6F7F2"
+    :footer-height="140"
+    :content-padding-x="0"
+  >
     <view v-if="loading" class="empty">加载中...</view>
     <template v-else-if="recipe">
       <view class="cover">
-        <image v-if="cover" :src="cover" mode="aspectFill" class="cover-img" />
-        <view v-else class="cover-ph">🍽️</view>
-        <view class="cover-mask" />
-        <view class="cover-info">
-          <text class="title">{{ recipe.title }}</text>
-          <view class="meta">
-            <text>⭐ {{ recipe.difficultyText }}</text>
-            <text v-if="recipe.calories">🔥 {{ recipe.calories }}kcal</text>
-            <text>❤️ {{ recipe.likes || 0 }}</text>
-            <text>⭐ {{ recipe.favorites || 0 }}</text>
-          </view>
+        <image :src="cover" mode="aspectFill" class="cover-img" />
+      </view>
+
+      <view class="hero">
+        <text class="title">{{ recipe.title }}</text>
+        <view class="meta">
+          <text class="chip">{{ recipe.difficultyText }}</text>
+          <text v-if="recipe.calories" class="chip muted">{{ recipe.calories }}kcal</text>
+          <text class="chip muted">喜欢 {{ recipe.likes || 0 }}</text>
+          <text class="chip muted">收藏 {{ recipe.favorites || 0 }}</text>
         </view>
       </view>
 
       <view class="action-bar">
         <view class="action" :class="{ on: status.liked }" @click="onLike">
-          <text>{{ status.liked ? '❤️' : '🤍' }}</text>
+          <image
+            class="action-icon"
+            :src="status.liked ? '/static/icons/heart-active.png' : '/static/icons/heart.png'"
+            mode="aspectFit"
+          />
           <text>{{ status.liked ? '已喜欢' : '喜欢' }}</text>
         </view>
         <view class="action" :class="{ on: status.favorited }" @click="onFavorite">
-          <text>{{ status.favorited ? '⭐' : '☆' }}</text>
+          <image
+            class="action-icon"
+            :src="status.favorited ? '/static/icons/star-active.png' : '/static/icons/star.png'"
+            mode="aspectFit"
+          />
           <text>{{ status.favorited ? '已收藏' : '收藏' }}</text>
         </view>
         <view class="action" :class="{ on: status.cooked }" @click="onCooked">
-          <text>👨‍🍳</text>
+          <image class="action-icon" src="/static/icons/check.png" mode="aspectFit" />
           <text>{{ status.cooked ? '已做过' : '做过' }}</text>
         </view>
       </view>
 
       <view class="blocks">
         <view class="card">
-          <view class="card-title">📝 菜品介绍</view>
+          <view class="card-title">菜品介绍</view>
           <text class="desc">{{ recipe.summary || '暂无描述' }}</text>
         </view>
 
         <view v-if="recipe.ingredientsHtml" class="card">
-          <view class="card-title">🥬 原料和工具</view>
+          <view class="card-title">原料和工具</view>
           <rich-text class="section-html" :nodes="recipe.ingredientsHtml" />
         </view>
 
         <view v-if="recipe.calculationHtml" class="card">
-          <view class="card-title">🧮 计算</view>
+          <view class="card-title">计算</view>
           <rich-text class="section-html" :nodes="recipe.calculationHtml" />
         </view>
 
         <view v-if="recipe.stepsHtml" class="card">
-          <view class="card-title">👩‍🍳 步骤</view>
+          <view class="card-title">步骤</view>
           <rich-text class="section-html" :nodes="recipe.stepsHtml" />
         </view>
 
         <view v-if="recipe.notesHtml" class="card">
-          <view class="card-title">📌 补充说明</view>
+          <view class="card-title">补充说明</view>
           <rich-text class="section-html" :nodes="recipe.notesHtml" />
         </view>
       </view>
@@ -72,22 +86,28 @@
 
 <script setup>
 import { ref } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import PageLayout from '@/components/page-layout/PageLayout.vue'
 import { getRecipeDetail } from '@/services/recipe'
 import { addHistory, getRecipeStatus, toggleLike, toggleFavorite, toggleCooked } from '@/services/userRecipe'
 import { getCoverTempUrl } from '@/utils/index'
+import { getRecipePlaceholder } from '@/utils/recipePlaceholder'
+import { prepareRecipeShare } from '@/utils/recipeShare'
 import { showApiError } from '@/utils/apiError'
 
 const recipe = ref(null)
 const loading = ref(true)
 const status = ref({ liked: false, favorited: false, cooked: false })
 const recipeId = ref(0)
-const cover = ref('')
+const cover = ref(getRecipePlaceholder())
+
+function syncShare() {
+  if (recipe.value) prepareRecipeShare(recipe.value)
+}
 
 async function load(id) {
   loading.value = true
-  cover.value = ''
+  cover.value = getRecipePlaceholder()
   try {
     const [detail, st] = await Promise.all([
       getRecipeDetail(id),
@@ -95,7 +115,9 @@ async function load(id) {
     ])
     if (detail.code === 200) {
       recipe.value = detail.data
-      cover.value = await getCoverTempUrl(detail.data?.coverImage)
+      const temp = await getCoverTempUrl(detail.data?.coverImage)
+      cover.value = temp || getRecipePlaceholder(detail.data?.categorySlug)
+      syncShare()
     }
     if (st.code === 200) status.value = st.data
     addHistory(id).catch(() => {})
@@ -150,6 +172,11 @@ onLoad((q) => {
   recipeId.value = Number(q.id)
   if (recipeId.value) load(recipeId.value)
 })
+
+// mixin 的 onShow 会先 reset；此处再写回菜品分享配置
+onShow(() => {
+  syncShare()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -157,123 +184,154 @@ onLoad((q) => {
 
 .cover {
   position: relative;
-  height: 420rpx;
+  height: 460rpx;
+  background: $bg-muted;
 }
 
-.cover-img, .cover-ph {
+.cover-img {
   width: 100%;
   height: 100%;
+  background: $bg-soft;
 }
 
-.cover-ph {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 80rpx;
-  background: linear-gradient(135deg, #ffe0d0, #ff8c5a);
-}
-
-.cover-mask {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.65));
-}
-
-.cover-info {
-  position: absolute;
-  left: 32rpx;
-  right: 32rpx;
-  bottom: 32rpx;
-  color: #fff;
+.hero {
+  padding: 28rpx $page-padding-x 8rpx;
+  background: $bg-color;
 }
 
 .title {
   display: block;
   font-size: 40rpx;
-  font-weight: 700;
-  margin-bottom: 12rpx;
+  font-weight: 750;
+  color: $text-primary;
+  line-height: $line-tight;
+  margin-bottom: 16rpx;
+  word-break: break-word;
 }
 
 .meta {
   display: flex;
-  gap: 24rpx;
-  font-size: 24rpx;
-  opacity: 0.9;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.chip {
+  padding: 6rpx 14rpx;
+  border-radius: $radius-sm;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: $primary-color;
+  background: $primary-soft;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.muted {
+    color: $text-secondary;
+    background: $bg-muted;
+    font-weight: 500;
+  }
 }
 
 .action-bar {
   display: flex;
-  margin: -20rpx 24rpx 24rpx;
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 24rpx;
-  box-shadow: $shadow-lg;
-  position: relative;
-  z-index: 2;
+  margin: 20rpx $page-padding-x;
+  background: $bg-card;
+  border-radius: $radius-md;
+  padding: 8rpx;
+  border: 1rpx solid $border-color;
 }
 
 .action {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6rpx;
+  padding: 16rpx 8rpx;
+  border-radius: $radius-sm;
   font-size: 22rpx;
   color: $text-secondary;
+  transition: background $duration-fast $ease-out, color $duration-fast $ease-out;
 
-  &.on { color: $primary-color; }
+  &.on {
+    color: $primary-color;
+    background: $primary-soft;
+    font-weight: 650;
+  }
 }
 
-.blocks { padding: 0 24rpx 40rpx; }
+.action-icon {
+  width: 34rpx;
+  height: 34rpx;
+  flex-shrink: 0;
+}
+
+.blocks {
+  padding: 0 $page-padding-x 40rpx;
+}
 
 .card {
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 24rpx;
-  margin-bottom: 20rpx;
-  box-shadow: $shadow-sm;
+  background: $bg-card;
+  border-radius: $radius-md;
+  padding: $card-padding;
+  margin-bottom: 16rpx;
+  border: 1rpx solid $border-color;
 }
 
 .card-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  margin-bottom: 16rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: $text-primary;
+  margin-bottom: 14rpx;
+  padding-bottom: 12rpx;
+  border-bottom: 1rpx solid $border-color;
 }
 
 .desc {
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: $text-secondary;
-  line-height: 1.6;
+  line-height: $line-loose;
+  word-break: break-word;
 }
 
 .section-html {
   display: block;
-  font-size: 26rpx;
+  font-size: 28rpx;
   color: $text-secondary;
-  line-height: 1.7;
+  line-height: $line-loose;
+  word-break: break-word;
 }
 
 .bottom-bar {
-  padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom));
-  background: #fff;
-  box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.06);
+  padding: 16rpx $page-padding-x calc(16rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.96);
+  border-top: 1rpx solid $border-color;
+  box-shadow: $shadow-md;
 }
 
 .cook-btn {
   width: 100%;
-  height: 88rpx;
-  line-height: 88rpx;
+  height: $btn-height;
+  line-height: $btn-height;
   text-align: center;
-  background: linear-gradient(135deg, #ff6b35, #ff8c5a);
-  color: #fff;
-  border-radius: 44rpx;
+  background: $primary-color;
+  color: $text-white;
+  border-radius: $btn-radius;
   font-size: 30rpx;
-  font-weight: 600;
+  font-weight: 700;
+
+  &:active {
+    background: $primary-hover;
+  }
 }
 
 .empty {
   padding: 120rpx;
   text-align: center;
-  color: #999;
+  color: $text-light;
+  font-size: 26rpx;
 }
 </style>
