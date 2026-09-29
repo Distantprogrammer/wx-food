@@ -86,7 +86,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import {
   parseHtmlToBlocks,
   blocksToHtml,
@@ -122,17 +122,24 @@ function typeLabel(t) {
 function loadFromHtml(html) {
   syncing.value = true
   blocks.value = parseHtmlToBlocks(html)
-  syncing.value = false
+  nextTick(() => {
+    syncing.value = false
+  })
 }
 
 function emitHtml() {
   if (syncing.value) return
+  syncing.value = true
   emit('update:modelValue', blocksToHtml(blocks.value))
+  nextTick(() => {
+    syncing.value = false
+  })
 }
 
 watch(
   () => props.modelValue,
   (val) => {
+    if (syncing.value) return
     const next = blocksToHtml(blocks.value)
     if (val === next) return
     loadFromHtml(val)
@@ -142,12 +149,14 @@ watch(
 
 function onTextInput(bi, e) {
   const v = e?.detail?.value ?? ''
+  if (!blocks.value[bi]) return
   blocks.value[bi].text = v
   emitHtml()
 }
 
 function onItemInput(bi, ii, e) {
   const v = e?.detail?.value ?? ''
+  if (!blocks.value[bi]) return
   const items = blocks.value[bi].items.slice()
   items[ii] = v
   blocks.value[bi].items = items
@@ -155,11 +164,13 @@ function onItemInput(bi, ii, e) {
 }
 
 function addItem(bi) {
+  if (!blocks.value[bi]) return
   blocks.value[bi].items = [...(blocks.value[bi].items || []), '']
   emitHtml()
 }
 
 function removeItem(bi, ii) {
+  if (!blocks.value[bi]) return
   const items = blocks.value[bi].items.slice()
   items.splice(ii, 1)
   if (!items.length) items.push('')
@@ -173,9 +184,11 @@ function addBlock(type) {
 }
 
 function removeBlock(bi) {
+  if (bi < 0 || bi >= blocks.value.length) return
   const next = blocks.value.slice()
   next.splice(bi, 1)
-  blocks.value = next.length ? next : [createBlock('p')]
+  // 允许删到空，显示空态；不再强制塞回一个段落
+  blocks.value = next
   emitHtml()
 }
 

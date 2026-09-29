@@ -8,13 +8,13 @@
     <view class="audit-main">
       <view class="audit-head">
         <text class="audit-title">{{ titleText }}</text>
-        <text class="tag green">{{ securityLabel }}</text>
+        <text class="tag">{{ securityLabel }}</text>
       </view>
       <text class="audit-body">{{ message.content }}</text>
       <text class="audit-meta">{{ wordCount }} 字</text>
       <view v-if="!batchMode" class="audit-actions">
-        <button class="approve-button" @click="emit('approve', message)">审核通过</button>
-        <button class="danger-button" @click="emit('reject', message)">审核拒绝</button>
+        <view class="action-btn primary" @click="emit('approve', message)">审核通过</view>
+        <view class="action-btn danger" @click="emit('reject', message)">审核拒绝</view>
       </view>
     </view>
   </view>
@@ -47,15 +47,13 @@ const securityLabel = computed(() => {
 
 <style lang="scss" scoped>
 @import '@/styles/variables.scss';
+@import '@/styles/mixins.scss';
 
 .audit-card {
   display: flex;
   gap: 20rpx;
-  padding: 24rpx;
-  border: 1px solid rgba(31, 45, 42, 0.08);
-  border-radius: $radius-md;
-  background: $card;
-  box-shadow: $shadow-card;
+  @include workbench-card;
+  margin-bottom: 0;
 
   &.batch-mode {
     display: grid;
@@ -70,6 +68,7 @@ const securityLabel = computed(() => {
 
 .checkbox-wrap {
   padding-top: 4rpx;
+  @include pressed;
 }
 
 .checkbox {
@@ -78,15 +77,20 @@ const securityLabel = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 4rpx solid $wechat;
-  border-radius: 10rpx;
-  color: $wechat;
+  border: 2rpx solid $primary-color;
+  border-radius: $radius-sm;
+  color: $primary-color;
   font-size: 22rpx;
-  font-weight: 900;
+  font-weight: 700;
+  box-sizing: border-box;
 
   &:not(.checked) {
-    border-color: #b7c0bc;
+    border-color: $border-color;
     color: transparent;
+  }
+
+  &.checked {
+    background: $primary-soft;
   }
 }
 
@@ -100,72 +104,57 @@ const securityLabel = computed(() => {
 
 .audit-title {
   flex: 1;
-  font-size: 28rpx;
-  font-weight: 850;
-  color: $ink;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  font-size: $font-size-base;
+  font-weight: 700;
+  color: $text-primary;
+  @include ellipsis(1);
 }
 
 .tag {
-  display: inline-flex;
-  align-items: center;
-  height: 44rpx;
-  padding: 0 16rpx;
-  border-radius: 12rpx;
-  font-size: 20rpx;
-  font-weight: 850;
-
-  &.green {
-    background: #e9fbf1;
-    color: $wechat-dark;
+  @include status-tag;
+  &.tag,
+  & {
+    color: $primary-color;
+    background: $primary-soft;
   }
 }
 
 .audit-body {
   display: block;
-  color: $ink-soft;
+  color: $text-secondary;
   font-size: 26rpx;
-  line-height: 42rpx;
-  font-weight: 600;
+  line-height: $line-loose;
+  font-weight: 500;
   margin-bottom: 8rpx;
+  word-break: break-word;
 }
 
 .audit-meta {
   display: block;
-  color: $muted;
-  font-size: 22rpx;
-  font-weight: 650;
+  color: $text-light;
+  font-size: $font-size-xs;
   margin-bottom: 16rpx;
 }
 
 .audit-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 16rpx;
+  gap: 12rpx;
 }
 
-.approve-button,
-.danger-button {
-  min-width: 152rpx;
-  height: 68rpx;
-  padding: 0 24rpx;
-  border-radius: $radius-md;
-  font-size: 24rpx;
-  font-weight: 850;
-  line-height: 68rpx;
-}
+.action-btn {
+  @include op-chip;
 
-.approve-button {
-  border: 1px solid rgba(7, 193, 96, 0.2);
-  background: #ecfbf2;
-  color: $wechat-dark;
-}
+  &.primary {
+    color: $primary-color;
+    background: $primary-soft;
+  }
 
-.danger-button {
-  border: 1px solid rgba(228, 91, 79, 0.18);
-  background: $danger-soft;
-  color: $danger;
+  &.danger {
+    color: $error-color;
+    background: $error-soft;
+  }
 }
 </style>

@@ -71,7 +71,7 @@
     </view>
 
     <view v-if="needSeed && isAdmin" class="seed-tip" @click="goSeed">
-      <text>云库暂无菜谱数据，点此导入种子（首次）</text>
+      <text>云库暂无菜谱数据，点此导入种子（自动审核通过）</text>
     </view>
   </PageLayout>
 </template>
@@ -106,10 +106,10 @@ async function load() {
     if (res.code === 200) {
       recommend.value = res.data?.recommend || []
       hot.value = res.data?.hot || []
-      needSeed.value = !recommend.value.length && !hot.value.length
+      needSeed.value = !!res.data?.needSeed
     }
   } catch (e) {
-    needSeed.value = true
+    needSeed.value = false
     showApiError(e, '加载失败')
   }
 }

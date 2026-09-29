@@ -27,6 +27,16 @@ $warning-color: #C98A12;
 $warning-soft: rgba(201, 138, 18, 0.16);
 $error-color: #D94C3D;
 $error-soft: rgba(217, 76, 61, 0.12);
+/* legacy aliases */
+$danger: $error-color;
+$danger-soft: $error-soft;
+
+/* ===== Workbench touch / action ===== */
+$touch-min: 56rpx;
+$op-height: 56rpx;
+$search-height: 68rpx;
+$drawer-z: 3000;
+$mask-scrim: rgba(31, 45, 42, 0.48);
 
 /* aliases used across legacy components */
 $ink: $text-primary;

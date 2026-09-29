@@ -58,7 +58,46 @@ async function upsertByField(collection, field, value, data, { skipLookup = fals
   return 'created'
 }
 
-function toRecipeDoc(r) {
+/**
+ * 种子内容 upsert：
+ * - 始终按 ID 查找，避免空库并发/重复导入产生双份
+ * - 已存在且非 source=seed 的用户稿：跳过，防止覆盖
+ * - 更新时不改写 createdBy*；缺 createTime 时补齐
+ */
+async function upsertSeedContent(collection, field, value, data, actor = {}) {
+  const found = await db.collection(collection).where({ [field]: value }).limit(1).get()
+  if (found.data.length) {
+    const existing = found.data[0]
+    // 仅覆盖种子或无 source 的历史数据；用户稿 (source=user 等) 一律跳过
+    if (existing.source && existing.source !== 'seed') {
+      return 'skipped'
+    }
+    const patch = { ...data, source: 'seed', updateTime: db.serverDate() }
+    delete patch.createdByOpenid
+    delete patch.createdByNickname
+    delete patch.createTime
+    if (!existing.createTime) {
+      patch.createTime = db.serverDate()
+    }
+    if (!existing.createdByOpenid && actor.openid) {
+      patch.createdByOpenid = actor.openid
+      patch.createdByNickname = actor.nickname || ''
+    }
+    await db.collection(collection).doc(existing._id).update({ data: patch })
+    return 'updated'
+  }
+  await db.collection(collection).add({
+    data: {
+      ...data,
+      source: 'seed',
+      createTime: db.serverDate(),
+      updateTime: db.serverDate()
+    }
+  })
+  return 'created'
+}
+
+function toRecipeDoc(r, actor = {}) {
   return {
     recipeId: Number(r.id),
     title: r.title,
@@ -80,7 +119,25 @@ function toRecipeDoc(r) {
     notesHtml: r.notes_html || '',
     markdownHtml: r.markdown_html || '',
     images: r.images || [],
-    lastUpdated: r.last_updated || ''
+    lastUpdated: r.last_updated || '',
+    auditStatus: 'approved',
+    source: 'seed',
+    createdByOpenid: actor.openid || '',
+    createdByNickname: actor.nickname || ''
+  }
+}
+
+function toTipDoc(t, actor = {}) {
+  return {
+    tipId: Number(t.id),
+    title: t.title,
+    summary: t.summary || '',
+    markdownHtml: t.markdown_html || '',
+    images: t.images || [],
+    auditStatus: 'approved',
+    source: 'seed',
+    createdByOpenid: actor.openid || '',
+    createdByNickname: actor.nickname || ''
   }
 }
 
@@ -89,6 +146,10 @@ exports.main = async (event) => {
     const wxContext = cloud.getWXContext()
     const openid = wxContext.OPENID
     const user = await common.requireUser(db, openid)
+    const actor = {
+      openid: user.openid || openid || '',
+      nickname: user.nickname || ''
+    }
     let isEmpty = true
     try {
       const recipeCount = await db.collection('recipes').count()
@@ -101,8 +162,7 @@ exports.main = async (event) => {
     }
 
     const action = event.action || 'recipes'
-    const result = { categories: 0, recipes: 0, tips: 0 }
-    const skipLookup = isEmpty
+    const result = { categories: 0, recipes: 0, tips: 0, skipped: 0 }
 
     // 分类：仅单独调用或菜谱批次 start=0 时写入，避免每批重复
     if (action === 'categories' || (action === 'recipes' && (Number(event.start) || 0) === 0)) {
@@ -135,12 +195,13 @@ exports.main = async (event) => {
       })
       let sort = 0
       for (const slug of Object.keys(catMap)) {
+        // 分类始终 lookup，避免 categories + recipes(start=0) 双写产生重复
         await upsertByField('categories', 'slug', slug, {
           slug,
           name: catMap[slug],
           icon: CATEGORY_ICONS[slug] || '🍽️',
           sort: sort++
-        }, { skipLookup })
+        }, { skipLookup: false })
         result.categories++
       }
     }
@@ -152,8 +213,15 @@ exports.main = async (event) => {
       const limit = Math.min(Math.max(Number(event.limit) || 10, 1), 20)
       const slice = recipes.slice(start, start + limit)
       for (const r of slice) {
-        await upsertByField('recipes', 'recipeId', Number(r.id), toRecipeDoc(r), { skipLookup })
-        result.recipes++
+        const status = await upsertSeedContent(
+          'recipes',
+          'recipeId',
+          Number(r.id),
+          toRecipeDoc(r, actor),
+          actor
+        )
+        if (status === 'skipped') result.skipped++
+        else result.recipes++
       }
       result.recipesTotal = recipes.length
       result.recipesNext = start + slice.length < recipes.length ? start + slice.length : null
@@ -166,14 +234,15 @@ exports.main = async (event) => {
       const limit = Math.min(Math.max(Number(event.limit) || 10, 1), 20)
       const slice = tips.slice(start, start + limit)
       for (const t of slice) {
-        await upsertByField('tips', 'tipId', Number(t.id), {
-          tipId: Number(t.id),
-          title: t.title,
-          summary: t.summary || '',
-          markdownHtml: t.markdown_html || '',
-          images: t.images || []
-        }, { skipLookup: false })
-        result.tips++
+        const status = await upsertSeedContent(
+          'tips',
+          'tipId',
+          Number(t.id),
+          toTipDoc(t, actor),
+          actor
+        )
+        if (status === 'skipped') result.skipped++
+        else result.tips++
       }
       result.tipsTotal = tips.length
       result.tipsNext = start + slice.length < tips.length ? start + slice.length : null

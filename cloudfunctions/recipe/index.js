@@ -11,13 +11,17 @@ const HIDDEN_CATEGORY_SLUGS = ['template']
 function isHiddenDoc(doc) {
   if (!doc) return true
   if (HIDDEN_CATEGORY_SLUGS.indexOf(doc.categorySlug) >= 0) return true
-  return String(doc.title || '').trim() === '示例菜'
+  if (String(doc.title || '').trim() === '示例菜') return true
+  // 缺省视为已通过；待审/驳回不对 C 端展示
+  if (common.normalizeAuditStatus(doc.auditStatus) !== 'approved') return true
+  return false
 }
 
 function visibleWhere(extra = {}) {
   return {
     ...extra,
-    categorySlug: _.nin(HIDDEN_CATEGORY_SLUGS)
+    categorySlug: _.nin(HIDDEN_CATEGORY_SLUGS),
+    auditStatus: 'approved'
   }
 }
 
@@ -49,6 +53,13 @@ exports.main = async (event) => {
       const latestRes = await db.collection('recipes').where(where).orderBy('recipeId', 'asc').limit(limit).get()
       const countRes = await db.collection('recipes').where(where).count()
       const total = countRes.total || 0
+      let recipeTotal = total
+      try {
+        const allRes = await db.collection('recipes').count()
+        recipeTotal = allRes.total || 0
+      } catch (e) {
+        recipeTotal = total
+      }
       let random = []
       if (total > 0) {
         const skip = Math.floor(Math.random() * Math.max(total - 20, 1))
@@ -58,7 +69,11 @@ exports.main = async (event) => {
       return common.ok({
         hot: filterVisible(hotRes.data).map(common.toListRecipe),
         recommend: filterVisible(latestRes.data).map(common.toListRecipe),
-        slot: random.map(common.toListRecipe)
+        slot: random.map(common.toListRecipe),
+        approvedTotal: total,
+        recipeTotal,
+        // 仅真正空库时提示导入；有待审/旧数据时不应误导去 seed
+        needSeed: recipeTotal === 0
       })
     }
 
@@ -79,6 +94,34 @@ exports.main = async (event) => {
       const res = await db.collection('recipes').where(where).skip(skip).limit(1).get()
       const doc = filterVisible(res.data)[0]
       return common.ok(common.toListRecipe(doc || null))
+    }
+
+    // 当前用户新增的菜谱历史（含待审/驳回/已通过）
+    if (action === 'myCreated') {
+      const wxContext = cloud.getWXContext()
+      const user = await common.requireUser(db, wxContext.OPENID)
+      const page = Math.max(Number(event.page) || 1, 1)
+      const limit = Math.min(Number(event.limit) || PAGE_SIZE, 50)
+      const skip = (page - 1) * limit
+      const where = {
+        createdByOpenid: user.openid,
+        categorySlug: _.nin(HIDDEN_CATEGORY_SLUGS)
+      }
+      const col = db.collection('recipes').where(where)
+      const countRes = await col.count()
+      const listRes = await col.orderBy('createTime', 'desc').skip(skip).limit(limit).get()
+      const list = (listRes.data || []).map((doc) => ({
+        ...common.toListRecipe(doc),
+        createTime: doc.createTime || null,
+        auditTime: doc.auditTime || null
+      }))
+      return common.ok({
+        list,
+        page,
+        limit,
+        total: countRes.total || 0,
+        hasMore: skip + list.length < (countRes.total || 0)
+      })
     }
 
     // list

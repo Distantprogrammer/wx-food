@@ -67,6 +67,7 @@ function mapDifficulty(level) {
 function toListRecipe(doc) {
   if (!doc) return null
   const diff = mapDifficulty(doc.difficulty)
+  const auditStatus = normalizeAuditStatus(doc.auditStatus)
   return {
     id: doc.recipeId,
     _id: doc._id,
@@ -81,9 +82,19 @@ function toListRecipe(doc) {
     favorites: doc.favorites || 0,
     coverImage: doc.coverImage || '',
     summary: doc.summary || '',
+    auditStatus,
+    createTime: doc.createTime || null,
+    auditTime: doc.auditTime || null,
     ingredientsCount: Array.isArray(doc.ingredients) ? doc.ingredients.length : 0,
     stepsCount: Array.isArray(doc.steps) ? doc.steps.length : 0
   }
+}
+
+function normalizeAuditStatus(status) {
+  const s = String(status || '').trim()
+  if (s === 'pending' || s === 'approved' || s === 'rejected') return s
+  // 无 auditStatus 视为未通过，需重新导入种子或审核
+  return 'pending'
 }
 
 function toDetailRecipe(doc) {
@@ -112,6 +123,7 @@ module.exports = {
   requireUser,
   requireAdmin,
   mapDifficulty,
+  normalizeAuditStatus,
   toListRecipe,
   toDetailRecipe
 }

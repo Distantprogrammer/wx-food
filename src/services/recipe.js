@@ -19,3 +19,11 @@ export function getRecipeDetail(recipeId, options) {
 export function getRandomRecipe(options) {
   return request('recipe', { action: 'random' }, options)
 }
+
+export function getMyCreatedRecipes(params = {}, options) {
+  return request('recipe', { action: 'myCreated', ...params }, options)
+}
+
+export function deleteMyRecipe(recipeId, options) {
+  return request('admin', { action: 'recipeDelete', recipeId }, options)
+}

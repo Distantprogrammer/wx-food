@@ -12,16 +12,19 @@
   >
     <template #header-content>
       <view class="search-wrap">
-        <view class="search-bar">
-          <image class="search-icon" src="/static/icons/search.png" mode="aspectFit" />
-          <input
-            v-model="keyword"
-            class="search-input"
-            placeholder="搜索菜谱、食材"
-            placeholder-class="search-ph"
-            confirm-type="search"
-            @confirm="reload"
-          />
+        <view class="search-row">
+          <view class="search-bar">
+            <image class="search-icon" src="/static/icons/search.png" mode="aspectFit" />
+            <input
+              v-model="keyword"
+              class="search-input"
+              placeholder="搜索菜谱、食材"
+              placeholder-class="search-ph"
+              confirm-type="search"
+              @confirm="reload"
+            />
+          </view>
+          <view class="add-btn" @click="goAddRecipe">新增</view>
         </view>
       </view>
     </template>
@@ -86,12 +89,15 @@
 import { ref, computed, onMounted } from 'vue'
 import PageLayout from '@/components/page-layout/PageLayout.vue'
 import { useTabPage } from '@/composables/useTabPage'
+import { useUserStore } from '@/store/user'
 import { getCategories, getRecipeList } from '@/services/recipe'
 import { getCoverTempUrlBatch } from '@/utils/index'
 import { getRecipePlaceholder } from '@/utils/recipePlaceholder'
 import { showApiError } from '@/utils/apiError'
 
 useTabPage('category')
+
+const userStore = useUserStore()
 
 /** 与云函数 difficulty 映射一致：1=易(≤2) 2=中(3) 3=难(≥4) */
 const difficultyOptions = [
@@ -238,6 +244,14 @@ function goDetail(item) {
   uni.navigateTo({ url: `/subPackages/pkg-recipe/detail/index?id=${item.id}` })
 }
 
+function goAddRecipe() {
+  if (!userStore.isLogin) {
+    uni.showToast({ title: '请先登录', icon: 'none' })
+    return
+  }
+  uni.navigateTo({ url: '/subPackages/pkg-admin/recipes/edit?pending=1' })
+}
+
 onMounted(async () => {
   await loadCats()
   await load(true)
@@ -252,7 +266,15 @@ onMounted(async () => {
   background: $bg-card;
 }
 
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
 .search-bar {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 12rpx;
@@ -261,6 +283,18 @@ onMounted(async () => {
   border-radius: $radius-sm;
   padding: 0 20rpx;
   height: 68rpx;
+}
+
+.add-btn {
+  flex-shrink: 0;
+  height: 68rpx;
+  line-height: 68rpx;
+  padding: 0 22rpx;
+  border-radius: $radius-sm;
+  background: $primary-color;
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 650;
 }
 
 .search-icon {

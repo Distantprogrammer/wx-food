@@ -1,3 +1,5 @@
+@import './variables.scss';
+
 @mixin flex-center {
   display: flex;
   align-items: center;
@@ -146,4 +148,123 @@
 @mixin safe-area-bottom {
   padding-bottom: constant(safe-area-inset-bottom);
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+@mixin pressed {
+  &:active {
+    opacity: 0.72;
+  }
+}
+
+@mixin status-tag {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 40rpx;
+  padding: 0 12rpx;
+  border-radius: $radius-sm;
+  font-size: 20rpx;
+  font-weight: 650;
+  line-height: 1;
+  box-sizing: border-box;
+
+  &.pending {
+    color: $warning-color;
+    background: $warning-soft;
+  }
+
+  &.approved {
+    color: $primary-color;
+    background: $primary-soft;
+  }
+
+  &.rejected {
+    color: $error-color;
+    background: $error-soft;
+  }
+
+  &.read {
+    color: $primary-color;
+    background: $primary-soft;
+  }
+
+  &.processed {
+    color: $success-color;
+    background: $success-soft;
+  }
+
+  /* 反馈「未读」复用 pending 类名，由页面传入 text=未读；颜色偏警示红 */
+  &.fb-unread,
+  &.unread {
+    color: $error-color;
+    background: $error-soft;
+  }
+}
+
+@mixin op-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: $op-height;
+  padding: 0 16rpx;
+  border-radius: $radius-sm;
+  font-size: 24rpx;
+  font-weight: 650;
+  color: $text-secondary;
+  background: $bg-muted;
+  box-sizing: border-box;
+  @include pressed;
+
+  &.primary {
+    color: $primary-color;
+    background: $primary-soft;
+  }
+
+  &.warn {
+    color: $warning-color;
+    background: $warning-soft;
+  }
+
+  &.danger {
+    color: $error-color;
+    background: $error-soft;
+  }
+
+  &.success {
+    color: $success-color;
+    background: $success-soft;
+  }
+
+  &.ghost {
+    color: $text-secondary;
+    background: transparent;
+    border: 1rpx solid $border-color;
+  }
+}
+
+@mixin sheet-handle {
+  width: 64rpx;
+  height: 8rpx;
+  margin: 12rpx auto 4rpx;
+  border-radius: $radius-round;
+  background: $border-color;
+}
+
+@mixin workbench-card {
+  background: $bg-card;
+  border-radius: $radius-md;
+  padding: $card-padding;
+  margin-bottom: $list-gap;
+  border: 1rpx solid $border-color;
+}
+
+@mixin search-field {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  height: $search-height;
+  padding: 0 8rpx 0 20rpx;
+  border-radius: $radius-sm;
+  background: $bg-muted;
+  border: 1rpx solid $border-color;
 }

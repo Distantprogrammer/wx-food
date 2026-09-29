@@ -1,6 +1,7 @@
 <template>
   <PageLayout title="技巧详情" show-back background-color="#F6F7F2" :content-padding-x="32">
     <view v-if="loading" class="empty">加载中...</view>
+    <view v-else-if="!tip" class="empty">技巧不存在或尚未通过审核</view>
     <view v-else-if="tip" class="article">
       <text class="title">{{ tip.title }}</text>
       <text v-if="tip.summary" class="summary">{{ tip.summary }}</text>
@@ -25,7 +26,12 @@ onLoad(async (q) => {
   try {
     const res = await getTipDetail(Number(q.id))
     if (res.code === 200) tip.value = res.data
+    else {
+      tip.value = null
+      showApiError(res, '技巧不存在或尚未通过审核')
+    }
   } catch (e) {
+    tip.value = null
     showApiError(e, '加载失败')
   } finally {
     loading.value = false

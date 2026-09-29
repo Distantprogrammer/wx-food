@@ -43,6 +43,27 @@
       }
     },
     {
+      "path": "pages/me/feedback-history",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "反馈历史"
+      }
+    },
+    {
+      "path": "pages/me/recipe-history",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "新增菜谱"
+      }
+    },
+    {
+      "path": "pages/me/tip-history",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "新增技巧"
+      }
+    },
+    {
       "path": "pages/me/about",
       "style": {
         "navigationStyle": "custom",
@@ -100,6 +121,13 @@
           }
         },
         {
+          "path": "recipes/audit",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "审核菜谱"
+          }
+        },
+        {
           "path": "recipes/edit",
           "style": {
             "navigationStyle": "custom",
@@ -111,6 +139,13 @@
           "style": {
             "navigationStyle": "custom",
             "navigationBarTitleText": "技巧管理"
+          }
+        },
+        {
+          "path": "tips/audit",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "审核技巧"
           }
         },
         {
@@ -132,6 +167,13 @@
           "style": {
             "navigationStyle": "custom",
             "navigationBarTitleText": "用户反馈"
+          }
+        },
+        {
+          "path": "users/list",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "用户管理"
           }
         },
         {

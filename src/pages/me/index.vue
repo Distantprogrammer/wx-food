@@ -94,6 +94,16 @@
           <text class="ml">意见反馈</text>
           <image class="ma" src="/static/icons/chevron.png" mode="aspectFit" />
         </view>
+        <view class="menu-item" @click="goRecipeHistory">
+          <text class="mi">菜谱</text>
+          <text class="ml">新增菜谱</text>
+          <image class="ma" src="/static/icons/chevron.png" mode="aspectFit" />
+        </view>
+        <view class="menu-item" @click="goTipHistory">
+          <text class="mi">技巧</text>
+          <text class="ml">新增技巧</text>
+          <image class="ma" src="/static/icons/chevron.png" mode="aspectFit" />
+        </view>
         <view v-if="isAdmin" class="menu-item" @click="goAdmin">
           <text class="mi">管理</text>
           <text class="ml">内容管理</text>
@@ -192,6 +202,14 @@ function goDetail(item) {
 
 function goFeedback() {
   uni.navigateTo({ url: '/pages/me/feedback' })
+}
+
+function goRecipeHistory() {
+  uni.navigateTo({ url: '/pages/me/recipe-history' })
+}
+
+function goTipHistory() {
+  uni.navigateTo({ url: '/pages/me/tip-history' })
 }
 
 function goAbout() {

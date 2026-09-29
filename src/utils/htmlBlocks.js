@@ -57,7 +57,7 @@ function parseListItems(inner) {
  */
 export function parseHtmlToBlocks(html) {
   const raw = String(html || '').trim()
-  if (!raw) return [createBlock('p')]
+  if (!raw) return []
 
   const blocks = []
   const re = /<(p|h[1-6]|ul|ol|pre)(\s[^>]*)?>([\s\S]*?)<\/\1>/gi
@@ -78,6 +78,7 @@ export function parseHtmlToBlocks(html) {
     } else if (tag === 'pre') {
       blocks.push(createBlock('p', { text: stripTags(inner) }))
     } else {
+      // 保留空 <p></p>，与 blocksToHtml 往返一致
       blocks.push(createBlock('p', { text: stripTags(inner) }))
     }
     last = m.index + m[0].length
@@ -90,7 +91,8 @@ export function parseHtmlToBlocks(html) {
 
   // 纯文本 / 无法识别时整段当段落
   if (!blocks.length) {
-    blocks.push(createBlock('p', { text: stripTags(raw) }))
+    const text = stripTags(raw)
+    if (text) blocks.push(createBlock('p', { text }))
   }
   return blocks
 }
@@ -116,17 +118,18 @@ export function blocksToHtml(blocks) {
     .map((b) => {
       if (!b) return ''
       if (b.type === 'ul' || b.type === 'ol') {
-        const items = (b.items || []).map((t) => String(t || '').trim()).filter(Boolean)
-        if (!items.length) return ''
-        const lis = items.map((t) => `<li>${escapeHtml(t)}</li>`).join('\n')
+        // 保留空列表结构，避免「添加后删不掉 / 一保存就消失」
+        const rawItems = Array.isArray(b.items) && b.items.length ? b.items : ['']
+        const lis = rawItems.map((t) => `<li>${escapeHtml(String(t || '').trim())}</li>`).join('\n')
         return `<${b.type}>\n${lis}\n</${b.type}>`
       }
-      const text = String(b.text || '').trim()
-      if (!text) return ''
-      if (b.type === 'h3') return `<h3>${escapeHtml(text)}</h3>`
-      // 多行段落拆成多个 p
+      const text = String(b.text || '')
+      const trimmed = text.trim()
+      if (b.type === 'h3') return `<h3>${escapeHtml(trimmed)}</h3>`
+      // 空段落也要落盘，否则新增空块无法参与 HTML 往返，删除会被 watch 还原
+      if (!trimmed) return '<p></p>'
       const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean)
-      if (lines.length <= 1) return `<p>${escapeHtml(text)}</p>`
+      if (lines.length <= 1) return `<p>${escapeHtml(trimmed)}</p>`
       return lines.map((l) => `<p>${escapeHtml(l)}</p>`).join('\n')
     })
     .filter(Boolean)

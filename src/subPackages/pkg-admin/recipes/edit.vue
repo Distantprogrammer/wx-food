@@ -1,5 +1,10 @@
 <template>
-  <PageLayout :title="form.recipeId ? '编辑菜品' : '新增菜品'" show-back background-color="#F6F7F2" :footer-height="120">
+  <PageLayout
+    :title="form.recipeId ? '编辑菜品' : (form.auditStatus === 'pending' ? '新增菜品（待审）' : '新增菜品')"
+    show-back
+    background-color="#F6F7F2"
+    :footer-height="120"
+  >
     <view v-if="loading" class="empty">加载中...</view>
     <view v-else class="form">
       <view class="field">
@@ -49,9 +54,17 @@
 
     <template #footer>
       <view class="footer">
+        <button class="btn ghost" @click="openPreview">预览</button>
         <button class="btn" :loading="saving" @click="onSave">保存</button>
       </view>
     </template>
+
+    <RecipePreviewDrawer
+      :visible="previewVisible"
+      :recipe="previewRecipe"
+      :cover-url="coverPreview"
+      @close="previewVisible = false"
+    />
   </PageLayout>
 </template>
 
@@ -60,18 +73,21 @@ import { ref, reactive, computed, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import PageLayout from '@/components/page-layout/PageLayout.vue'
 import HtmlBlockEditor from '@/components/HtmlBlockEditor/HtmlBlockEditor.vue'
+import RecipePreviewDrawer from '@/components/RecipePreviewDrawer/RecipePreviewDrawer.vue'
 import { useAdminGuard } from '@/composables/useAdminGuard'
 import { adminRecipeDetail, adminRecipeSave, adminCategoryList } from '@/services/admin'
 import { uploadCloudFile } from '@/utils/cloud'
-import { getCoverTempUrl } from '@/utils/index'
+import { getCoverTempUrl, getDifficulty } from '@/utils/index'
 import { showApiError } from '@/utils/apiError'
 
-useAdminGuard()
+const allowUserSubmit = ref(false)
+useAdminGuard({ allowUserSubmit: () => allowUserSubmit.value })
 
 const loading = ref(false)
 const saving = ref(false)
 const uploading = ref(false)
 const coverPreview = ref('')
+const previewVisible = ref(false)
 const categories = ref([])
 const form = reactive({
   recipeId: null,
@@ -85,8 +101,38 @@ const form = reactive({
   ingredientsHtml: '',
   calculationHtml: '',
   stepsHtml: '',
-  notesHtml: ''
+  notesHtml: '',
+  auditStatus: 'approved'
 })
+
+const previewRecipe = computed(() => {
+  const diff = getDifficulty(form.difficulty)
+  return {
+    title: form.title,
+    categorySlug: form.categorySlug,
+    categoryName: form.categoryName,
+    difficulty: Number(form.difficulty) || 3,
+    difficultyKey: diff.key,
+    difficultyText: diff.text,
+    calories: Number(form.calories) || 0,
+    coverImage: form.coverImage,
+    summary: form.summary,
+    likes: 0,
+    favorites: 0,
+    ingredientsHtml: form.ingredientsHtml,
+    calculationHtml: form.calculationHtml,
+    stepsHtml: form.stepsHtml,
+    notesHtml: form.notesHtml
+  }
+})
+
+function openPreview() {
+  if (!String(form.title || '').trim()) {
+    uni.showToast({ title: '请先填写标题再预览', icon: 'none' })
+    return
+  }
+  previewVisible.value = true
+}
 
 watch(
   () => form.coverImage,
@@ -184,6 +230,7 @@ async function loadDetail(id) {
     form.calculationHtml = d.calculationHtml || ''
     form.stepsHtml = d.stepsHtml || ''
     form.notesHtml = d.notesHtml || ''
+    form.auditStatus = d.auditStatus || 'approved'
   } catch (e) {
     showApiError(e, '加载失败')
   } finally {
@@ -200,7 +247,10 @@ async function onSave() {
   try {
     const res = await adminRecipeSave({ ...form })
     if (res.code === 200) {
-      uni.showToast({ title: '已保存', icon: 'success' })
+      uni.showToast({
+        title: form.auditStatus === 'pending' ? '已提交审核' : '已保存',
+        icon: 'success'
+      })
       setTimeout(() => uni.navigateBack(), 500)
     } else {
       showApiError(res, '保存失败')
@@ -213,8 +263,19 @@ async function onSave() {
 }
 
 onLoad(async (q) => {
+  if ((q.pending === '1' || q.owner === '1') && (!q.id || q.owner === '1')) {
+    allowUserSubmit.value = true
+  }
+  if (q.pending === '1' && !q.id) {
+    form.auditStatus = 'pending'
+  }
   await loadCategories()
-  if (q.id) await loadDetail(Number(q.id))
+  if (q.id) {
+    await loadDetail(Number(q.id))
+    if (allowUserSubmit.value) {
+      form.auditStatus = 'pending'
+    }
+  }
 })
 </script>
 
@@ -292,11 +353,14 @@ onLoad(async (q) => {
 }
 .cover-del { font-size: 24rpx; color: #e74c3c; flex-shrink: 0; }
 .footer {
+  display: flex;
+  gap: 16rpx;
   padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom));
   background: #FFFFFF;
+  border-top: 1rpx solid #E5E9E3;
 }
 .btn {
-  width: 100%;
+  flex: 1;
   height: 84rpx;
   line-height: 84rpx;
   background: #176B4A;
@@ -304,6 +368,13 @@ onLoad(async (q) => {
   border-radius: 12rpx;
   font-size: 30rpx;
   font-weight: 600;
+
+  &.ghost {
+    flex: 0 0 200rpx;
+    background: #EEF1EB;
+    color: #1F2D2A;
+    border: 1rpx solid #E5E9E3;
+  }
 }
 .empty { text-align: center; color: #8A9590; padding: 80rpx; }
 </style>

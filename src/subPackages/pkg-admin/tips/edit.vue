@@ -1,5 +1,10 @@
 <template>
-  <PageLayout :title="form.tipId ? '编辑技巧' : '新增技巧'" show-back background-color="#F6F7F2" :footer-height="120">
+  <PageLayout
+    :title="form.tipId ? '编辑技巧' : (form.auditStatus === 'pending' ? '新增技巧（待审）' : '新增技巧')"
+    show-back
+    background-color="#F6F7F2"
+    :footer-height="120"
+  >
     <view v-if="loading" class="empty">加载中...</view>
     <view v-else class="form">
       <view class="field">
@@ -14,31 +19,53 @@
     </view>
     <template #footer>
       <view class="footer">
+        <button class="btn ghost" @click="openPreview">预览</button>
         <button class="btn" :loading="saving" @click="onSave">保存</button>
       </view>
     </template>
+
+    <TipPreviewDrawer
+      :visible="previewVisible"
+      :tip="previewTip"
+      @close="previewVisible = false"
+    />
   </PageLayout>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import PageLayout from '@/components/page-layout/PageLayout.vue'
 import HtmlBlockEditor from '@/components/HtmlBlockEditor/HtmlBlockEditor.vue'
+import TipPreviewDrawer from '@/components/TipPreviewDrawer/TipPreviewDrawer.vue'
 import { useAdminGuard } from '@/composables/useAdminGuard'
 import { adminTipDetail, adminTipSave } from '@/services/admin'
 import { showApiError } from '@/utils/apiError'
 
-useAdminGuard()
+const allowUserSubmit = ref(false)
+useAdminGuard({ allowUserSubmit: () => allowUserSubmit.value })
 
 const loading = ref(false)
 const saving = ref(false)
+const previewVisible = ref(false)
 const form = reactive({
   tipId: null,
   title: '',
   summary: '',
-  markdownHtml: ''
+  markdownHtml: '',
+  auditStatus: 'approved'
 })
+
+const previewTip = computed(() => ({
+  title: form.title,
+  summary: form.summary,
+  markdownHtml: form.markdownHtml,
+  auditStatus: form.auditStatus
+}))
+
+function openPreview() {
+  previewVisible.value = true
+}
 
 async function loadDetail(id) {
   loading.value = true
@@ -52,6 +79,7 @@ async function loadDetail(id) {
     form.title = res.data.title || ''
     form.summary = res.data.summary || ''
     form.markdownHtml = res.data.markdownHtml || ''
+    form.auditStatus = res.data.auditStatus || 'approved'
   } catch (e) {
     showApiError(e, '加载失败')
   } finally {
@@ -68,7 +96,10 @@ async function onSave() {
   try {
     const res = await adminTipSave({ ...form })
     if (res.code === 200) {
-      uni.showToast({ title: '已保存', icon: 'success' })
+      uni.showToast({
+        title: form.auditStatus === 'pending' ? '已提交审核' : '已保存',
+        icon: 'success'
+      })
       setTimeout(() => uni.navigateBack(), 500)
     } else showApiError(res, '保存失败')
   } catch (e) {
@@ -78,8 +109,19 @@ async function onSave() {
   }
 }
 
-onLoad((q) => {
-  if (q.id) loadDetail(Number(q.id))
+onLoad(async (q) => {
+  if ((q.pending === '1' || q.owner === '1') && (!q.id || q.owner === '1')) {
+    allowUserSubmit.value = true
+  }
+  if (q.pending === '1' && !q.id) {
+    form.auditStatus = 'pending'
+  }
+  if (q.id) {
+    await loadDetail(Number(q.id))
+    if (allowUserSubmit.value) {
+      form.auditStatus = 'pending'
+    }
+  }
 })
 </script>
 
@@ -108,11 +150,14 @@ onLoad((q) => {
   box-sizing: border-box;
 }
 .footer {
+  display: flex;
+  gap: 16rpx;
   padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom));
   background: #FFFFFF;
+  border-top: 1rpx solid #E5E9E3;
 }
 .btn {
-  width: 100%;
+  flex: 1;
   height: 84rpx;
   line-height: 84rpx;
   background: #176B4A;
@@ -120,6 +165,13 @@ onLoad((q) => {
   border-radius: 12rpx;
   font-size: 30rpx;
   font-weight: 600;
+
+  &.ghost {
+    flex: 0 0 200rpx;
+    background: #EEF1EB;
+    color: #1F2D2A;
+    border: 1rpx solid #E5E9E3;
+  }
 }
 .empty { text-align: center; color: #8A9590; padding: 80rpx; }
 </style>

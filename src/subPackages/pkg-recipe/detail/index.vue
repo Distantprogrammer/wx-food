@@ -8,6 +8,7 @@
     :content-padding-x="0"
   >
     <view v-if="loading" class="empty">加载中...</view>
+    <view v-else-if="!recipe" class="empty">菜谱不存在或尚未通过审核</view>
     <template v-else-if="recipe">
       <view class="cover">
         <image :src="cover" mode="aspectFill" class="cover-img" />
@@ -118,9 +119,12 @@ async function load(id) {
       const temp = await getCoverTempUrl(detail.data?.coverImage)
       cover.value = temp || getRecipePlaceholder(detail.data?.categorySlug)
       syncShare()
+      addHistory(id).catch(() => {})
+    } else {
+      recipe.value = null
+      showApiError(detail, '菜谱不存在或尚未通过审核')
     }
     if (st.code === 200) status.value = st.data
-    addHistory(id).catch(() => {})
   } catch (e) {
     showApiError(e, '加载失败')
   } finally {

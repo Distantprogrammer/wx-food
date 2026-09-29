@@ -62,9 +62,20 @@ async function fetchRecipesByIds(ids) {
   const map = {}
   all.forEach((d) => {
     if (!d || d.categorySlug === 'template' || String(d.title || '').trim() === '示例菜') return
+    // 未通过审核的不出现在收藏/浏览等 C 端列表
+    if (common.normalizeAuditStatus(d.auditStatus) !== 'approved') return
     map[d.recipeId] = d
   })
   return ids.map((id) => map[id]).filter(Boolean).map(common.toListRecipe)
+}
+
+async function assertApprovedRecipe(recipeId) {
+  const res = await db.collection('recipes').where({ recipeId: Number(recipeId) }).limit(1).get()
+  const doc = res.data[0]
+  if (!doc) return null
+  if (doc.categorySlug === 'template' || String(doc.title || '').trim() === '示例菜') return null
+  if (common.normalizeAuditStatus(doc.auditStatus) !== 'approved') return null
+  return doc
 }
 
 exports.main = async (event) => {
@@ -78,6 +89,8 @@ exports.main = async (event) => {
 
     if (action === 'toggleLike' || action === 'toggleFavorite' || action === 'toggleCooked') {
       if (!recipeId) return common.fail('缺少 recipeId', 400)
+      const approved = await assertApprovedRecipe(recipeId)
+      if (!approved) return common.fail('菜谱不可用', 404)
       const key = action.replace('toggle', '').toLowerCase()
       const col = COLLECTIONS[key === 'like' ? 'like' : key === 'favorite' ? 'favorite' : 'cooked']
       const result = await toggle(col, openid, recipeId)
@@ -86,6 +99,8 @@ exports.main = async (event) => {
 
     if (action === 'addHistory') {
       if (!recipeId) return common.fail('缺少 recipeId', 400)
+      const approved = await assertApprovedRecipe(recipeId)
+      if (!approved) return common.ok(false)
       const col = db.collection('history')
       const found = await col.where({ userId: openid, recipeId }).limit(1).get()
       const now = db.serverDate()

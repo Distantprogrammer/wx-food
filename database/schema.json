@@ -13,7 +13,9 @@
         "updateTime": "date"
       },
       "indexes": [
-        { "name": "openid_unique", "unique": true, "keys": [{ "name": "openid", "direction": "1" }] }
+        { "name": "openid_unique", "unique": true, "keys": [{ "name": "openid", "direction": "1" }] },
+        { "name": "createTime", "keys": [{ "name": "createTime", "direction": "-1" }] },
+        { "name": "role_createTime", "keys": [{ "name": "role", "direction": "1" }, { "name": "createTime", "direction": "-1" }] }
       ]
     },
     {
@@ -56,6 +58,10 @@
         "markdownHtml": "string",
         "images": "array",
         "lastUpdated": "string",
+        "auditStatus": "string",
+        "auditTime": "date",
+        "createdByOpenid": "string",
+        "createdByNickname": "string",
         "createTime": "date",
         "updateTime": "date"
       },
@@ -63,7 +69,10 @@
         { "name": "recipeId_unique", "unique": true, "keys": [{ "name": "recipeId", "direction": "1" }] },
         { "name": "categorySlug", "keys": [{ "name": "categorySlug", "direction": "1" }] },
         { "name": "likes", "keys": [{ "name": "likes", "direction": "-1" }] },
-        { "name": "favorites", "keys": [{ "name": "favorites", "direction": "-1" }] }
+        { "name": "favorites", "keys": [{ "name": "favorites", "direction": "-1" }] },
+        { "name": "title", "keys": [{ "name": "title", "direction": "1" }] },
+        { "name": "auditStatus_recipeId", "keys": [{ "name": "auditStatus", "direction": "1" }, { "name": "recipeId", "direction": "-1" }] },
+        { "name": "createdBy_createTime", "keys": [{ "name": "createdByOpenid", "direction": "1" }, { "name": "createTime", "direction": "-1" }] }
       ]
     },
     {
@@ -76,11 +85,17 @@
         "summary": "string",
         "markdownHtml": "string",
         "images": "array",
+        "auditStatus": "string",
+        "createdByOpenid": "string",
+        "createdByNickname": "string",
+        "auditTime": "date",
         "createTime": "date",
         "updateTime": "date"
       },
       "indexes": [
-        { "name": "tipId_unique", "unique": true, "keys": [{ "name": "tipId", "direction": "1" }] }
+        { "name": "tipId_unique", "unique": true, "keys": [{ "name": "tipId", "direction": "1" }] },
+        { "name": "createdBy_createTime", "keys": [{ "name": "createdByOpenid", "direction": "1" }, { "name": "createTime", "direction": "-1" }] },
+        { "name": "auditStatus_tipId", "keys": [{ "name": "auditStatus", "direction": "1" }, { "name": "tipId", "direction": "-1" }] }
       ]
     },
     {
@@ -147,11 +162,18 @@
         "nickname": "string",
         "contact": "string",
         "content": "string",
+        "status": "string",
+        "isRead": "boolean",
+        "readTime": "date",
+        "handleTime": "date",
+        "updateTime": "date",
         "createTime": "date"
       },
       "indexes": [
         { "name": "createTime", "keys": [{ "name": "createTime", "direction": "-1" }] },
-        { "name": "openid", "keys": [{ "name": "openid", "direction": "1" }] }
+        { "name": "openid", "keys": [{ "name": "openid", "direction": "1" }] },
+        { "name": "openid_createTime", "keys": [{ "name": "openid", "direction": "1" }, { "name": "createTime", "direction": "-1" }] },
+        { "name": "status_createTime", "keys": [{ "name": "status", "direction": "1" }, { "name": "createTime", "direction": "-1" }] }
       ]
     },
     {

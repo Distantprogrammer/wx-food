@@ -38,7 +38,7 @@
       :disabled="isBusy"
       @click="handleSubmit"
     >
-      提交反馈
+      {{ submitText }}
     </button>
 
     <view class="preview-section">
@@ -66,7 +66,8 @@ const props = defineProps({
   initialContact: { type: String, default: '' },
   initialContent: { type: String, default: '' },
   autoFocus: { type: Boolean, default: false },
-  submitting: { type: Boolean, default: false }
+  submitting: { type: Boolean, default: false },
+  submitText: { type: String, default: '提交反馈' }
 })
 
 const emit = defineEmits(['submit', 'change'])
