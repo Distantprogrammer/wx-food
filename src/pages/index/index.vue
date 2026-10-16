@@ -37,18 +37,34 @@
       <view class="section-head">
         <text class="section-title">随机选菜</text>
       </view>
-      <view class="random-card">
-        <view class="random-result" :class="{ loading: spinning, ready: !!randomRecipe && !spinning }">
-          <text class="random-label">{{ spinning ? '正在挑选…' : randomRecipe ? '今日建议' : '尚未选择' }}</text>
-          <text class="random-name">{{ randomRecipe?.title || '点击下方开始随机' }}</text>
-          <text v-if="randomRecipe && !spinning" class="random-meta">
-            {{ randomRecipe.difficultyText || '' }}
-            <text v-if="randomRecipe.calories">· {{ randomRecipe.calories }}kcal</text>
-          </text>
+      <view class="random-panel">
+        <view class="random-stage">
+          <!-- 翻牌过程只用轻量卡片，避免频繁重建 RecipeCard / 拉封面 -->
+          <view v-if="spinning" class="spin-card flipping">
+            <view class="spin-cover" />
+            <view class="spin-body">
+              <text class="spin-name">{{ flashTitle || '挑选中…' }}</text>
+              <text class="spin-meta">正在翻牌</text>
+            </view>
+          </view>
+          <view v-else-if="randomRecipe" class="random-card-wrap">
+            <RecipeCard :recipe="randomRecipe" variant="rail" @click="goDetail" />
+          </view>
+          <view v-else class="random-placeholder">
+            <view class="ph-cover" />
+            <view class="ph-body">
+              <text class="ph-title">点击下方开始随机</text>
+              <text class="ph-sub">从今日精选中抽出一道菜</text>
+            </view>
+          </view>
         </view>
         <view class="random-actions">
-          <button v-if="randomRecipe && !spinning" class="btn-ghost" @click="goDetail(randomRecipe)">查看菜谱</button>
-          <button class="btn-primary" :class="{ busy: spinning }" :disabled="spinning" @click="spin">
+          <button
+            v-if="randomRecipe && !spinning"
+            class="btn-ghost"
+            @click="goDetail(randomRecipe)"
+          >查看菜谱</button>
+          <button class="btn-primary" :class="{ busy: spinning }" :disabled="spinning" @click="onSpin">
             {{ spinning ? '挑选中…' : randomRecipe ? '再随机一次' : '帮我随机' }}
           </button>
         </view>
@@ -77,7 +93,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import PageLayout from '@/components/page-layout/PageLayout.vue'
 import RecipeCard from '@/components/RecipeCard/RecipeCard.vue'
 import { useUserStore } from '@/store/user'
@@ -89,23 +105,40 @@ import { showApiError } from '@/utils/apiError'
 useTabPage('home')
 
 const userStore = useUserStore()
-const userInfo = computed(() => userStore.userInfo)
 const isAdmin = computed(() => userStore.isAdmin)
 const greeting = getGreeting()
 
 const recommend = ref([])
 const hot = ref([])
+const spinPool = ref([])
 const randomRecipe = ref(null)
+const flashTitle = ref('')
 const spinning = ref(false)
 const refreshing = ref(false)
 const needSeed = ref(false)
+let spinTimer = null
+
+function shuffle(list) {
+  const arr = [...(list || [])].filter((r) => r && r.id)
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    const tmp = arr[i]
+    arr[i] = arr[j]
+    arr[j] = tmp
+  }
+  return arr
+}
 
 async function load() {
   try {
-    const res = await getHome(6)
+    const res = await getHome(8)
     if (res.code === 200) {
-      recommend.value = res.data?.recommend || []
-      hot.value = res.data?.hot || []
+      const slot = shuffle(res.data?.slot || [])
+      const rec = shuffle(res.data?.recommend || [])
+      const pool = slot.length ? slot : rec
+      recommend.value = pool.slice(0, 8)
+      spinPool.value = pool
+      hot.value = (res.data?.hot || []).filter((r) => r && r.id)
       needSeed.value = !!res.data?.needSeed
     }
   } catch (e) {
@@ -114,16 +147,53 @@ async function load() {
   }
 }
 
-async function spin() {
+function clearSpinTimer() {
+  if (spinTimer) {
+    clearInterval(spinTimer)
+    spinTimer = null
+  }
+}
+
+async function onSpin() {
   if (spinning.value) return
+  // 先卸掉 RecipeCard，避免翻牌过程加载封面图
+  randomRecipe.value = null
   spinning.value = true
+  clearSpinTimer()
+
+  const pool = spinPool.value.length ? spinPool.value : recommend.value
+  let tick = 0
+  if (pool.length) {
+    flashTitle.value = pool[0].title || '挑选中…'
+    spinTimer = setInterval(() => {
+      const item = pool[tick % pool.length]
+      flashTitle.value = item?.title || '挑选中…'
+      tick += 1
+    }, 80)
+  } else {
+    flashTitle.value = '挑选中…'
+  }
+
   try {
-    const res = await getRandomRecipe()
-    if (res.code === 200) randomRecipe.value = res.data
-  } catch (e) {
-    showApiError(e, '随机失败')
-  } finally {
+    const [res] = await Promise.all([
+      getRandomRecipe(),
+      new Promise((r) => setTimeout(r, 800))
+    ])
+    clearSpinTimer()
+    flashTitle.value = ''
     spinning.value = false
+    if (res.code === 200 && res.data && res.data.id) {
+      randomRecipe.value = res.data
+    } else if (pool.length) {
+      randomRecipe.value = pool[Math.floor(Math.random() * pool.length)]
+    } else {
+      uni.showToast({ title: '暂无可随机菜谱', icon: 'none' })
+    }
+  } catch (e) {
+    clearSpinTimer()
+    flashTitle.value = ''
+    spinning.value = false
+    showApiError(e, '随机失败')
   }
 }
 
@@ -142,6 +212,7 @@ async function onRefresh() {
 }
 
 function goDetail(recipe) {
+  if (!recipe?.id) return
   uni.navigateTo({ url: `/subPackages/pkg-recipe/detail/index?id=${recipe.id}` })
 }
 
@@ -150,6 +221,7 @@ function goCategory() {
 }
 
 onMounted(load)
+onBeforeUnmount(clearSpinTimer)
 </script>
 
 <style lang="scss" scoped>
@@ -314,61 +386,90 @@ onMounted(load)
   flex-shrink: 0;
 }
 
-.random-card {
+.random-panel {
   background: $bg-card;
   border: 1rpx solid $border-color;
   border-radius: $radius-md;
   padding: $card-padding;
 }
 
-.random-result {
-  min-height: 160rpx;
-  padding: 28rpx 24rpx;
-  border-radius: $radius-sm;
-  background: $bg-muted;
+.random-stage {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 8rpx;
+  align-items: center;
   margin-bottom: 20rpx;
-  transition: background $duration-base $ease-out;
-
-  &.ready {
-    background: $primary-soft;
-  }
-
-  &.loading {
-    opacity: 0.85;
-  }
+  padding: 12rpx 0 4rpx;
 }
 
-.random-label {
+.random-card-wrap,
+.spin-card,
+.random-placeholder {
+  width: 300rpx;
+}
+
+.spin-card,
+.random-placeholder {
+  background: $bg-card;
+  border: 1rpx solid $border-color;
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.spin-card.flipping {
+  animation: cardFlip 0.16s ease-in-out infinite alternate;
+}
+
+.spin-cover,
+.ph-cover {
+  height: 200rpx;
+  background: linear-gradient(135deg, $bg-soft 0%, $bg-muted 100%);
+}
+
+.spin-body,
+.ph-body {
+  padding: 16rpx 18rpx 20rpx;
+  min-height: 100rpx;
+  box-sizing: border-box;
+}
+
+.spin-name,
+.ph-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: $text-primary;
+  margin-bottom: 6rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.spin-meta,
+.ph-sub {
+  display: block;
   font-size: 22rpx;
-  font-weight: 600;
   color: $text-light;
 }
 
-.random-name {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: $text-primary;
-  line-height: $line-tight;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  white-space: normal;
-}
-
-.random-meta {
-  font-size: 22rpx;
-  color: $text-secondary;
+.random-placeholder {
+  border-style: dashed;
+  background: $bg-muted;
 }
 
 .random-actions {
   display: flex;
   gap: 16rpx;
+}
+
+@keyframes cardFlip {
+  from {
+    transform: translateY(4rpx) scale(0.98);
+    opacity: 0.82;
+  }
+  to {
+    transform: translateY(-4rpx) scale(1);
+    opacity: 1;
+  }
 }
 
 .grid {

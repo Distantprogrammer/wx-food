@@ -164,6 +164,27 @@ exports.main = async (event) => {
     const action = event.action || ''
     const admin = await resolveActor(action, event)
 
+    // ---------- 待办汇总（我的页角标） ----------
+    if (action === 'pendingSummary') {
+      const [recipeRes, tipRes, feedbackRes] = await Promise.all([
+        db.collection('recipes').where({
+          auditStatus: 'pending',
+          categorySlug: _.nin(HIDDEN_CATEGORY_SLUGS)
+        }).count(),
+        db.collection('tips').where({ auditStatus: 'pending' }).count(),
+        db.collection('feedbacks').where({ status: 'pending' }).count()
+      ])
+      const recipes = recipeRes.total || 0
+      const tips = tipRes.total || 0
+      const feedbacks = feedbackRes.total || 0
+      return common.ok({
+        recipes,
+        tips,
+        feedbacks,
+        total: recipes + tips + feedbacks
+      })
+    }
+
     // ---------- recipes ----------
     if (action === 'recipeList') {
       const page = Math.max(Number(event.page) || 1, 1)

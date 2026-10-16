@@ -2,23 +2,13 @@
   <view class="write-form">
     <view class="form-card">
       <view class="field">
-        <text class="label">联系方式（选填）</text>
-        <input
-          v-model="contact"
-          class="input"
-          placeholder="微信 / 手机号，方便我们联系你"
-          :focus="autoFocus"
-          maxlength="40"
-          @input="emitChange"
-        />
-      </view>
-      <view class="field">
         <text class="label">反馈内容 *</text>
         <textarea
           v-model="content"
           class="textarea"
           placeholder="说说你的建议、问题或想要的功能..."
           maxlength="1000"
+          :focus="autoFocus"
           :show-confirm-bar="false"
           @input="emitChange"
         />
@@ -48,7 +38,6 @@
           <view class="avatar">{{ previewAvatar }}</view>
           <view class="head-main">
             <text class="letter-title">{{ previewTitle }}</text>
-            <text class="letter-time">{{ contact.trim() ? `联系：${contact.trim()}` : '未填写联系方式' }}</text>
           </view>
         </view>
         <text class="letter-body">{{ previewContent }}</text>
@@ -63,7 +52,6 @@ import { validateMessageContent, filterSensitiveWords } from '@/utils/security'
 
 const props = defineProps({
   authorName: { type: String, default: '美食家' },
-  initialContact: { type: String, default: '' },
   initialContent: { type: String, default: '' },
   autoFocus: { type: Boolean, default: false },
   submitting: { type: Boolean, default: false },
@@ -72,7 +60,6 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'change'])
 
-const contact = ref(props.initialContact)
 const content = ref(props.initialContent)
 const sensitiveStatus = ref('pending')
 const localSubmitting = ref(false)
@@ -83,54 +70,33 @@ const previewAvatar = computed(() => (props.authorName || '美').slice(0, 1))
 const previewTitle = computed(() => `${props.authorName || '美食家'} 的反馈`)
 const previewContent = computed(() => content.value.trim() || '反馈内容将显示在这里')
 
-watch(() => props.initialContact, (val) => { contact.value = val || '' })
 watch(() => props.initialContent, (val) => { content.value = val || '' })
 
 let checkTimer = null
 
 function runSensitiveCheck() {
   const text = content.value?.trim()
-  const c = contact.value?.trim()
-  if (!text && !c) {
+  if (!text) {
     sensitiveStatus.value = 'pending'
     return
   }
-  const contentOk = !text || filterSensitiveWords(text).passed
-  const contactOk = !c || filterSensitiveWords(c).passed
-  sensitiveStatus.value = contentOk && contactOk ? 'passed' : 'failed'
+  sensitiveStatus.value = filterSensitiveWords(text).passed ? 'passed' : 'failed'
 }
 
-watch([content, contact], () => {
+watch(content, () => {
   if (checkTimer) clearTimeout(checkTimer)
   checkTimer = setTimeout(runSensitiveCheck, 300)
 })
 
 function emitChange() {
   emit('change', {
-    contact: contact.value,
     content: content.value
   })
-}
-
-function validateContact(value = '') {
-  const v = String(value || '').trim()
-  if (!v) return { valid: true, message: 'ok' }
-  if (v.length > 40) return { valid: false, message: '联系方式不能超过40字' }
-  const sensitive = filterSensitiveWords(v)
-  if (!sensitive.passed) {
-    return { valid: false, message: `联系方式包含敏感词：${sensitive.hits.join('、')}` }
-  }
-  return { valid: true, message: 'ok' }
 }
 
 async function handleSubmit() {
   if (isBusy.value) return
 
-  const contactCheck = validateContact(contact.value)
-  if (!contactCheck.valid) {
-    uni.showToast({ title: contactCheck.message, icon: 'none' })
-    return
-  }
   const contentCheck = validateMessageContent(content.value)
   if (!contentCheck.valid) {
     uni.showToast({ title: contentCheck.message, icon: 'none' })
@@ -145,7 +111,6 @@ async function handleSubmit() {
       return
     }
     emit('submit', {
-      contact: contact.value.trim(),
       content: content.value.trim()
     })
   } finally {
@@ -183,18 +148,6 @@ async function handleSubmit() {
   font-size: 24rpx;
   color: $text-secondary;
   font-weight: 650;
-}
-
-.input {
-  width: 100%;
-  height: 80rpx;
-  padding: 0 20rpx;
-  border-radius: $radius-sm;
-  background: $bg-muted;
-  border: 1rpx solid $border-color;
-  font-size: 28rpx;
-  color: $text-primary;
-  box-sizing: border-box;
 }
 
 .textarea {
@@ -320,16 +273,6 @@ async function handleSubmit() {
   font-size: 28rpx;
   font-weight: 700;
   color: $text-primary;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.letter-time {
-  display: block;
-  margin-top: 4rpx;
-  color: $text-light;
-  font-size: 22rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

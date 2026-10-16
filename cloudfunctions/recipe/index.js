@@ -66,9 +66,19 @@ exports.main = async (event) => {
         const randRes = await db.collection('recipes').where(where).skip(skip).limit(20).get()
         random = filterVisible(randRes.data)
       }
+      // 打乱随机池，首页推荐轨使用随机而非按 ID 升序
+      for (let i = random.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        const tmp = random[i]
+        random[i] = random[j]
+        random[j] = tmp
+      }
+      const recommendList = (random.length ? random : filterVisible(latestRes.data))
+        .slice(0, limit)
+        .map(common.toListRecipe)
       return common.ok({
         hot: filterVisible(hotRes.data).map(common.toListRecipe),
-        recommend: filterVisible(latestRes.data).map(common.toListRecipe),
+        recommend: recommendList,
         slot: random.map(common.toListRecipe),
         approvedTotal: total,
         recipeTotal,

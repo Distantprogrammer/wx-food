@@ -40,7 +40,6 @@
             </view>
             <text class="time">{{ formatTime(item.createTime) }}</text>
           </view>
-          <text v-if="item.contact" class="contact">联系：{{ item.contact }}</text>
           <text class="content">{{ item.content }}</text>
           <view class="ops">
             <view class="ops-row">
@@ -382,14 +381,6 @@ onShow(() => load(true))
   color: $text-light;
   flex-shrink: 0;
   max-width: 220rpx;
-  @include ellipsis(1);
-}
-
-.contact {
-  display: block;
-  font-size: 24rpx;
-  color: $text-secondary;
-  margin-bottom: 10rpx;
   @include ellipsis(1);
 }
 

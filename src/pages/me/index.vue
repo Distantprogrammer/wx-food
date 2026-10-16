@@ -107,6 +107,7 @@
         <view v-if="isAdmin" class="menu-item" @click="goAdmin">
           <text class="mi">管理</text>
           <text class="ml">内容管理</text>
+          <text v-if="pendingCount > 0" class="badge">{{ pendingBadge }}</text>
           <image class="ma" src="/static/icons/chevron.png" mode="aspectFit" />
         </view>
         <view class="menu-item" @click="goAbout">
@@ -145,6 +146,7 @@ import PageLayout from '@/components/page-layout/PageLayout.vue'
 import { useUserStore } from '@/store/user'
 import { useTabPage } from '@/composables/useTabPage'
 import { getUserStats, getUserPreview } from '@/services/userRecipe'
+import { adminPendingSummary } from '@/services/admin'
 import { getCoverTempUrlBatch } from '@/utils/index'
 import { getRecipePlaceholder } from '@/utils/recipePlaceholder'
 
@@ -160,6 +162,8 @@ const history = ref([])
 const coverMap = ref({})
 const editVisible = ref(false)
 const editNickname = ref('')
+const pendingCount = ref(0)
+const pendingBadge = computed(() => (pendingCount.value > 99 ? '99+' : String(pendingCount.value)))
 
 function placeholderOf(item) {
   return getRecipePlaceholder(item?.categorySlug)
@@ -176,9 +180,27 @@ async function resolveCovers(rows) {
   coverMap.value = next
 }
 
+async function loadPendingSummary() {
+  if (!userStore.isAdmin) {
+    pendingCount.value = 0
+    return
+  }
+  try {
+    const res = await adminPendingSummary({ silent: true })
+    if (res.code === 200) {
+      pendingCount.value = Number(res.data?.total) || 0
+    }
+  } catch (e) {
+    // 角标失败不影响主流程
+  }
+}
+
 async function load() {
   try {
-    const [s, p] = await Promise.all([getUserStats(), getUserPreview()])
+    const tasks = [getUserStats(), getUserPreview()]
+    if (userStore.isAdmin) tasks.push(loadPendingSummary())
+    else pendingCount.value = 0
+    const [s, p] = await Promise.all(tasks)
     if (s.code === 200) stats.value = s.data
     if (p.code === 200) {
       favorites.value = p.data?.favorites || []
@@ -515,6 +537,22 @@ onShow(load)
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.badge {
+  flex-shrink: 0;
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 10rpx;
+  margin-right: 12rpx;
+  border-radius: $radius-round;
+  background: $error-color;
+  color: $text-white;
+  font-size: 20rpx;
+  font-weight: 700;
+  line-height: 32rpx;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .ma {

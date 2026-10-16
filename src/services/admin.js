@@ -1,5 +1,10 @@
 import { request } from './request'
 
+/** 管理员待办汇总：待审菜谱 + 待审技巧 + 未读反馈 */
+export function adminPendingSummary(options) {
+  return request('admin', { action: 'pendingSummary' }, options)
+}
+
 export function adminRecipeList(params = {}, options) {
   return request('admin', { action: 'recipeList', ...params }, options)
 }

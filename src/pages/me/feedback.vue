@@ -32,7 +32,6 @@
       <WriteForm
         :key="formKey"
         :author-name="authorName"
-        :initial-contact="formContact"
         :initial-content="formContent"
         :submitting="submitting"
         :submit-text="editingId ? '保存修改' : '提交反馈'"
@@ -51,7 +50,6 @@
           />
           <text class="time">{{ formatTime(item.createTime) }}</text>
         </view>
-        <text v-if="item.contact" class="contact">联系：{{ item.contact }}</text>
         <text class="content">{{ item.content }}</text>
         <text v-if="statusTip(item)" class="read-tip">{{ statusTip(item) }}</text>
         <view class="ops">
@@ -108,7 +106,6 @@ const hasMore = ref(false)
 const loading = ref(false)
 const refreshing = ref(false)
 const editingId = ref('')
-const formContact = ref('')
 const formContent = ref('')
 const formKey = ref(0)
 const historyLoaded = ref(false)
@@ -199,7 +196,6 @@ async function onRefresh() {
 
 function startEdit(item) {
   editingId.value = item.id
-  formContact.value = item.contact || ''
   formContent.value = item.content || ''
   formKey.value += 1
   activeTab.value = 'write'
@@ -207,18 +203,17 @@ function startEdit(item) {
 
 function cancelEdit() {
   editingId.value = ''
-  formContact.value = ''
   formContent.value = ''
   formKey.value += 1
 }
 
-async function onSubmit({ contact, content }) {
+async function onSubmit({ content }) {
   if (submitting.value) return
   submitting.value = true
   try {
     const res = editingId.value
-      ? await updateMyFeedback({ id: editingId.value, contact, content })
-      : await submitFeedback({ contact, content })
+      ? await updateMyFeedback({ id: editingId.value, content })
+      : await submitFeedback({ content })
     if (res.code === 200) {
       uni.showToast({ title: editingId.value ? '已保存' : '已提交', icon: 'success' })
       cancelEdit()
@@ -342,14 +337,6 @@ onShow(() => {
   font-size: 22rpx;
   color: $text-light;
   max-width: 260rpx;
-  @include ellipsis(1);
-}
-
-.contact {
-  display: block;
-  font-size: 24rpx;
-  color: $text-secondary;
-  margin-bottom: 10rpx;
   @include ellipsis(1);
 }
 
