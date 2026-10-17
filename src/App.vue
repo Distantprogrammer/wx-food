@@ -20,6 +20,10 @@ onLaunch(async () => {
 })
 </script>
 
+<style>
+@import './styles/tokens.wxss';
+</style>
+
 <style lang="scss">
 @import './styles/variables.scss';
 

@@ -177,10 +177,22 @@ exports.main = async (event) => {
       const recipes = recipeRes.total || 0
       const tips = tipRes.total || 0
       const feedbacks = feedbackRes.total || 0
+      let weekNew = 0
+      try {
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        const [recipeWeek, tipWeek] = await Promise.all([
+          db.collection('recipes').where({ createTime: _.gte(weekAgo) }).count(),
+          db.collection('tips').where({ createTime: _.gte(weekAgo) }).count()
+        ])
+        weekNew = (recipeWeek.total || 0) + (tipWeek.total || 0)
+      } catch (error) {
+        weekNew = 0
+      }
       return common.ok({
         recipes,
         tips,
         feedbacks,
+        weekNew,
         total: recipes + tips + feedbacks
       })
     }
@@ -358,9 +370,11 @@ exports.main = async (event) => {
       }
       const found = await db.collection('recipes').where({ recipeId }).limit(1).get()
       if (!found.data[0]) return common.fail('菜谱不存在', 404)
+      const rejectReason = String(event.rejectReason || event.reason || '').trim()
       await db.collection('recipes').doc(found.data[0]._id).update({
         data: {
           auditStatus,
+          rejectReason: auditStatus === 'rejected' ? rejectReason : '',
           auditTime: db.serverDate(),
           updateTime: db.serverDate()
         }
@@ -522,9 +536,11 @@ exports.main = async (event) => {
       }
       const found = await db.collection('tips').where({ tipId }).limit(1).get()
       if (!found.data[0]) return common.fail('技巧不存在', 404)
+      const rejectReason = String(event.rejectReason || event.reason || '').trim()
       await db.collection('tips').doc(found.data[0]._id).update({
         data: {
           auditStatus,
+          rejectReason: auditStatus === 'rejected' ? rejectReason : '',
           auditTime: db.serverDate(),
           updateTime: db.serverDate()
         }

@@ -1,117 +1,171 @@
 ﻿<template>
   <PageLayout
-    title="分类"
     show-tab-bar
     active-tab="category"
+    :show-header="false"
     :scrollable="false"
-    background-color="#F6F7F2"
-    :header-style="{ background: '#FFFFFF', color: '#1F2D2A', borderBottom: '1rpx solid #E5E9E3' }"
-    :header-content-height="88"
+    background-color="#F7F8FA"
     :content-padding-x="0"
+    :content-padding-top="0"
     :extra-bottom-padding="0"
   >
-    <template #header-content>
-      <view class="search-wrap">
-        <view class="search-row">
-          <view class="search-bar">
-            <image class="search-icon" src="/static/icons/search.png" mode="aspectFit" />
-            <input
-              v-model="keyword"
-              class="search-input"
-              placeholder="搜索菜谱、食材"
-              placeholder-class="search-ph"
-              confirm-type="search"
-              @confirm="reload"
-            />
-          </view>
-          <view class="add-btn" @click="goAddRecipe">新增</view>
-        </view>
+    <view class="cat-page">
+      <view class="status-spacer" :style="{ height: statusBarHeight + 'px' }" />
+
+      <view class="page-head">
+        <text class="page-title">分类</text>
+        <text class="page-sub">按菜系挑一道今天想吃的</text>
       </view>
-    </template>
 
-    <view class="category-layout">
-      <scroll-view scroll-y class="category-nav">
-        <view
-          v-for="cat in categories"
-          :key="cat.slug"
-          class="nav-item"
-          :class="{ active: activeSlug === cat.slug }"
-          @click="switchCat(cat.slug)"
-        >
-          <text class="nav-icon">{{ cat.icon || '🍽️' }}</text>
-          <text class="nav-name">{{ cat.name }}</text>
+      <view class="search-row">
+        <view class="search-bar">
+          <view class="search-ico" />
+          <input
+            v-model="keyword"
+            class="search-input"
+            placeholder="搜索菜谱、食材"
+            placeholder-class="ph"
+            confirm-type="search"
+            @confirm="reload"
+          />
         </view>
-      </scroll-view>
+        <view class="add-btn" hover-class="is-pressed" :hover-stay-time="180" @click="goAddRecipe">＋ 新增</view>
+      </view>
 
-      <view class="category-right">
-        <view class="filter-bar">
-          <view class="filter-item" :class="{ active: !!difficulty }" @click="openDifficulty">
-            <text class="filter-text">{{ difficultyLabel }}</text>
-            <text class="filter-caret">▾</text>
-          </view>
-          <view class="filter-item" :class="{ active: sort !== 'default' }" @click="openSort">
-            <text class="filter-text">{{ sortLabel }}</text>
-            <text class="filter-caret">▾</text>
-          </view>
-        </view>
-
-        <scroll-view
-          scroll-y
-          class="recipe-scroll"
-          @scrolltolower="loadMore"
-          :refresher-enabled="true"
-          :refresher-triggered="refreshing"
-          @refresherrefresh="onRefresh"
-        >
-          <view v-if="!loading && !list.length" class="empty">暂无菜谱</view>
-          <view class="recipe-grid">
-            <view v-for="item in list" :key="item.id" class="mini-card" @click="goDetail(item)">
-              <view class="cover">
-                <image :src="coverMap[item.id] || placeholderOf(item)" mode="aspectFill" class="cover-img" />
-              </view>
-              <view class="info">
-                <text class="name">{{ item.title }}</text>
-                <view class="meta">
-                  <text class="meta-item">{{ item.difficultyText }}</text>
-                  <text class="meta-item likes">喜欢 {{ item.likes || 0 }}</text>
-                </view>
-              </view>
+      <view class="category-layout" :style="{ height: navHeight + 'px' }">
+        <scroll-view scroll-y class="category-nav" :style="{ height: navHeight + 'px' }" :show-scrollbar="false">
+          <view
+            v-for="cat in categories"
+            :key="cat.slug"
+            class="nav-item"
+            :class="{ active: activeSlug === cat.slug }"
+            @click="switchCat(cat.slug)"
+          >
+            <view class="nav-pill">
+              <text class="nav-icon">{{ cat.icon || '🍽️' }}</text>
+              <text class="nav-name">{{ cat.name }}</text>
             </view>
           </view>
-          <view v-if="hasMore" class="more">加载更多</view>
         </scroll-view>
+
+        <view class="category-right">
+          <view class="filter-bar">
+            <filter-pill
+              label="难度"
+              :active="difficulty > 0"
+              :value-text="difficultyText"
+              :dot="difficultyDot"
+              @click="sheet = 'difficulty'"
+            />
+            <filter-pill
+              label="排序"
+              :active="sort !== 'default'"
+              :value-text="sortText"
+              @click="sheet = 'sort'"
+            />
+            <text class="filter-count">共 {{ total }} 道</text>
+          </view>
+
+          <scroll-view
+            scroll-y
+            class="recipe-scroll"
+            :style="{ height: listHeight + 'px' }"
+            :show-scrollbar="false"
+            @scrolltolower="loadMore"
+            :refresher-enabled="true"
+            :refresher-triggered="refreshing"
+            @refresherrefresh="onRefresh"
+          >
+            <empty-state v-if="!loading && !list.length" title="暂无菜谱" desc="换个分类或筛选条件" />
+            <view class="recipe-grid">
+              <RecipeCard
+                v-for="item in list"
+                :key="item.id"
+                :recipe="item"
+                :cover="coverMap[item.id]"
+                variant="tile"
+                meta-mode="favorites"
+                :show-badge="false"
+                @click="goDetail"
+              />
+            </view>
+            <view v-if="hasMore" class="more">加载更多</view>
+          </scroll-view>
+        </view>
       </view>
     </view>
+
+    <template #overlay>
+      <filter-sheet
+        :visible="sheet === 'difficulty'"
+        icon="🎯"
+        title="选择难度"
+        subtitle="按火候挑一道今天做得来的"
+        :options="difficultySheetOptions"
+        :value="difficulty"
+        @select="onPickDifficulty"
+        @reset="onResetDifficulty"
+        @close="sheet = ''"
+      />
+      <filter-sheet
+        :visible="sheet === 'sort'"
+        icon="↕️"
+        title="选择排序"
+        subtitle="换一种方式翻今天的菜单"
+        :options="sortSheetOptions"
+        :value="sort"
+        @select="onPickSort"
+        @reset="onResetSort"
+        @close="sheet = ''"
+      />
+    </template>
   </PageLayout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import PageLayout from '@/components/page-layout/PageLayout.vue'
+import RecipeCard from '@/components/RecipeCard/RecipeCard.vue'
+import EmptyState from '@/components/empty-state/empty-state.vue'
+import FilterPill from '@/components/filter-pill/filter-pill.vue'
+import FilterSheet from '@/components/filter-sheet/filter-sheet.vue'
 import { useTabPage } from '@/composables/useTabPage'
 import { useUserStore } from '@/store/user'
 import { getCategories, getRecipeList } from '@/services/recipe'
 import { getCoverTempUrlBatch } from '@/utils/index'
 import { getRecipePlaceholder } from '@/utils/recipePlaceholder'
 import { showApiError } from '@/utils/apiError'
+import { getStatusBarHeight, getTabBarOccupiedHeight, getWindowHeight, rpx2px } from '@/utils/system'
 
 useTabPage('category')
 
 const userStore = useUserStore()
+const statusBarHeight = getStatusBarHeight()
+const navHeight = ref(420)
+const listHeight = ref(320)
+
+function syncPaneHeight() {
+  const pane = Math.max(
+    getWindowHeight() - getTabBarOccupiedHeight() - statusBarHeight - rpx2px(260),
+    240
+  )
+  navHeight.value = pane
+  listHeight.value = Math.max(pane - rpx2px(96), 180)
+}
 
 /** 与云函数 difficulty 映射一致：1=易(≤2) 2=中(3) 3=难(≥4) */
-const difficultyOptions = [
-  { label: '全部难度', value: 0 },
-  { label: '简单', value: 1 },
-  { label: '中等', value: 2 },
-  { label: '困难', value: 3 }
+const difficultySheetOptions = [
+  { value: 1, emoji: '🌱', title: '简单', desc: '步骤少，新手也能一次成功', dot: 'easy', badgeBg: '#E8F6EC' },
+  { value: 2, emoji: '🔥', title: '中等', desc: '有一点火候，按步骤来就好', dot: 'medium', badgeBg: '#FFF4E5' },
+  { value: 3, emoji: '🌶️', title: '困难', desc: '工序多，适合认真做一桌', dot: 'hard', badgeBg: '#FDECEC' }
 ]
 
-const sortOptions = [
-  { label: '默认排序', value: 'default' },
-  { label: '最热', value: 'likes' },
-  { label: '收藏', value: 'favorites' },
-  { label: '低卡', value: 'calories' }
+const sortSheetOptions = [
+  { value: 'default', emoji: '✨', title: '默认排序', desc: '按推荐和更新综合排', badgeBg: '#F4F5F7' },
+  { value: 'likes', emoji: '❤️', title: '最热', desc: '大家都在看的菜排在前面', tag: 'HOT', tagType: 'hot', badgeBg: '#FDECEC' },
+  { value: 'favorites', emoji: '⭐', title: '收藏', desc: '被收藏最多的菜排在前面', badgeBg: '#FFF8E8' },
+  { value: 'calories', emoji: '🥗', title: '低卡', desc: '热量从低到高', tag: '轻食', tagType: 'light', badgeBg: '#E8F3EE' }
 ]
 
 const categories = ref([{ slug: '', name: '全部', icon: '🔥' }])
@@ -125,20 +179,12 @@ const keyword = ref('')
 const coverMap = ref({})
 const difficulty = ref(0)
 const sort = ref('default')
+const total = ref(0)
+const sheet = ref('')
 
-const difficultyLabel = computed(() => {
-  const hit = difficultyOptions.find((o) => o.value === difficulty.value)
-  return hit?.value ? hit.label : '难度'
-})
-
-const sortLabel = computed(() => {
-  const hit = sortOptions.find((o) => o.value === sort.value)
-  return hit && hit.value !== 'default' ? hit.label : '排序'
-})
-
-function placeholderOf(item) {
-  return getRecipePlaceholder(item?.categorySlug)
-}
+const difficultyText = computed(() => difficultySheetOptions.find((o) => o.value === difficulty.value)?.title || '')
+const difficultyDot = computed(() => difficultySheetOptions.find((o) => o.value === difficulty.value)?.dot || '')
+const sortText = computed(() => sortSheetOptions.find((o) => o.value === sort.value && o.value !== 'default')?.title || '')
 
 async function resolveCovers(rows) {
   const urls = (rows || []).map((r) => r.coverImage).filter(Boolean)
@@ -185,9 +231,11 @@ async function load(reset = false, { silent } = {}) {
       const rows = res.data?.list || []
       list.value = reset ? rows : list.value.concat(rows)
       hasMore.value = !!res.data?.hasMore
+      total.value = Number(res.data?.total) || list.value.length
       resolveCovers(rows)
     }
   } catch (e) {
+    if (!reset && page.value > 1) page.value -= 1
     showApiError(e, '加载失败')
   } finally {
     loading.value = false
@@ -200,28 +248,26 @@ function switchCat(slug) {
   load(true)
 }
 
-function openDifficulty() {
-  uni.showActionSheet({
-    itemList: difficultyOptions.map((o) => o.label),
-    success: (res) => {
-      const opt = difficultyOptions[res.tapIndex]
-      if (!opt || difficulty.value === opt.value) return
-      difficulty.value = opt.value
-      load(true)
-    }
-  })
+function onPickDifficulty(value) {
+  difficulty.value = value
+  load(true, { silent: true })
 }
 
-function openSort() {
-  uni.showActionSheet({
-    itemList: sortOptions.map((o) => o.label),
-    success: (res) => {
-      const opt = sortOptions[res.tapIndex]
-      if (!opt || sort.value === opt.value) return
-      sort.value = opt.value
-      load(true)
-    }
-  })
+function onResetDifficulty() {
+  if (!difficulty.value) return
+  difficulty.value = 0
+  load(true, { silent: true })
+}
+
+function onPickSort(value) {
+  sort.value = value
+  load(true, { silent: true })
+}
+
+function onResetSort() {
+  if (sort.value === 'default') return
+  sort.value = 'default'
+  load(true, { silent: true })
 }
 
 function reload() {
@@ -253,254 +299,212 @@ function goAddRecipe() {
 }
 
 onMounted(async () => {
+  syncPaneHeight()
   await loadCats()
   await load(true)
 })
+
+onShow(syncPaneHeight)
 </script>
 
-<style lang="scss" scoped>
-@import '@/styles/variables.scss';
+<style scoped>
+.cat-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
 
-.search-wrap {
-  padding: 0 24rpx 16rpx;
-  background: $bg-card;
+.status-spacer {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.page-head {
+  flex-shrink: 0;
+  padding: 16rpx 190rpx 24rpx 32rpx;
 }
 
 .search-row {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
-  gap: 12rpx;
+  gap: 24rpx;
+  padding: 0 32rpx 24rpx;
 }
 
 .search-bar {
   flex: 1;
-  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  background: $bg-muted;
-  border: 1rpx solid $border-color;
-  border-radius: $radius-sm;
-  padding: 0 20rpx;
-  height: 68rpx;
-}
-
-.add-btn {
-  flex-shrink: 0;
-  height: 68rpx;
-  line-height: 68rpx;
-  padding: 0 22rpx;
-  border-radius: $radius-sm;
-  background: $primary-color;
-  color: #fff;
-  font-size: 26rpx;
-  font-weight: 650;
-}
-
-.search-icon {
-  width: 32rpx;
-  height: 32rpx;
-  flex-shrink: 0;
-  opacity: 0.65;
+  gap: 16rpx;
+  min-width: 0;
+  height: 76rpx;
+  padding: 0 32rpx;
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
 }
 
 .search-input {
   flex: 1;
   min-width: 0;
-  height: 68rpx;
-  line-height: 68rpx;
-  font-size: 26rpx;
-  color: $text-primary;
+  height: 48rpx;
+  color: #1A1A1A;
+  font-size: 28rpx;
+  line-height: 1.5;
 }
 
-.search-ph {
-  color: $text-light;
+.add-btn {
+  flex-shrink: 0;
+  height: 76rpx;
+  padding: 0 32rpx;
+  border-radius: 20rpx;
+  background: #2D6A4F;
+  color: #FFFFFF;
+  font-size: 24rpx;
+  font-weight: 700;
+  line-height: 76rpx;
+  transition: transform 180ms ease;
+}
+
+.add-btn.is-pressed {
+  transform: scale(0.98);
 }
 
 .category-layout {
   display: flex;
-  height: 100%;
+  flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .category-nav {
-  width: 168rpx;
-  background: $bg-muted;
-  height: 100%;
+  width: 208rpx;
+  height: auto;
+  align-self: stretch;
   flex-shrink: 0;
-  border-right: 1rpx solid $border-color;
+  overflow: hidden;
+  background: #F7F8FA;
 }
 
 .nav-item {
+  position: relative;
+  max-width: 100%;
+  margin: 4rpx 8rpx 4rpx 18rpx;
+  padding: 4rpx 0;
+  box-sizing: border-box;
+}
+
+.nav-pill {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 22rpx 12rpx;
-  font-size: 22rpx;
-  color: $text-secondary;
-  position: relative;
-  gap: 8rpx;
-
-  &.active {
-    background: $bg-card;
-    color: $primary-color;
-    font-weight: 650;
-
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 6rpx;
-      height: 36rpx;
-      background: $primary-color;
-      border-radius: 0 4rpx 4rpx 0;
-    }
-  }
+  max-width: 100%;
+  min-height: 96rpx;
+  padding: 12rpx 8rpx;
+  box-sizing: border-box;
 }
 
 .nav-icon {
-  font-size: 30rpx;
-  line-height: 1;
-  width: 32rpx;
-  height: 32rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
+  margin-bottom: 6rpx;
+  font-size: 36rpx;
+  line-height: 1;
+  text-align: center;
+}
+
+.nav-item.active .nav-pill {
+  padding: 14rpx 8rpx;
+  background: #FFFFFF;
+  border: 2rpx solid #E6E6E6;
+  border-radius: 16rpx;
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: -16rpx;
+  top: 50%;
+  width: 6rpx;
+  height: 28rpx;
+  margin-top: -14rpx;
+  background: #2D6A4F;
+  border-radius: 6rpx;
 }
 
 .nav-name {
-  text-align: center;
-  line-height: 1.3;
-  max-width: 100%;
+  width: 100%;
+  max-height: 64rpx;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: #1A1A1A;
+  font-size: 22rpx;
+  font-weight: 400;
+  line-height: 32rpx;
+  text-align: center;
+  white-space: normal;
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.nav-item.active .nav-name {
+  color: #2D6A4F;
+  font-weight: 700;
 }
 
 .category-right {
-  flex: 1;
-  min-width: 0;
   display: flex;
+  flex: 1;
   flex-direction: column;
-  background: $bg-color;
-  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  background: #F7F8FA;
 }
 
 .filter-bar {
   display: flex;
   flex-shrink: 0;
-  padding: 14rpx 16rpx;
-  background: $bg-card;
-  border-bottom: 1rpx solid $border-color;
-  gap: 12rpx;
-}
-
-.filter-item {
-  display: flex;
   align-items: center;
-  gap: 4rpx;
-  flex-shrink: 0;
-  max-width: 48%;
-  padding: 10rpx 16rpx;
-  background: $bg-muted;
-  border: 1rpx solid transparent;
-  border-radius: $radius-sm;
-  font-size: 22rpx;
-  color: $text-secondary;
-
-  &.active {
-    background: $primary-soft;
-    border-color: rgba(23, 107, 74, 0.18);
-    color: $primary-color;
-    font-weight: 650;
-  }
+  gap: 16rpx;
+  padding: 16rpx 24rpx 24rpx;
 }
 
-.filter-text {
+.filter-count {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
+  color: #737373;
+  font-size: 24rpx;
+  line-height: 1.5;
+  text-align: right;
   white-space: nowrap;
-  max-width: 140rpx;
-}
-
-.filter-caret {
-  font-size: 18rpx;
-  line-height: 1;
-  opacity: 0.7;
-  flex-shrink: 0;
+  text-overflow: ellipsis;
 }
 
 .recipe-scroll {
   flex: 1;
-  height: 0;
-  padding: 16rpx;
+  height: 1px;
+  min-height: 0;
+  padding: 0 24rpx 32rpx;
   box-sizing: border-box;
 }
 
 .recipe-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16rpx;
+  gap: 24rpx;
 }
 
-.mini-card {
-  background: $bg-card;
-  border-radius: $radius-md;
-  overflow: hidden;
-  border: 1rpx solid $border-color;
-}
-
-.cover {
-  height: 176rpx;
-  background: $bg-muted;
-}
-
-.cover-img {
-  width: 100%;
-  height: 100%;
-  background: $bg-soft;
-}
-
-.info {
-  padding: 14rpx 14rpx 16rpx;
-}
-
-.name {
-  display: block;
-  font-size: 26rpx;
-  font-weight: 650;
-  color: $text-primary;
-  margin-bottom: 8rpx;
-  line-height: $line-tight;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.meta {
-  display: flex;
-  gap: 12rpx;
-  font-size: 20rpx;
-  color: $text-light;
-  min-width: 0;
-}
-
-.meta-item {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 50%;
-}
-
-.empty,
 .more {
-  padding: 40rpx;
-  text-align: center;
-  color: $text-light;
+  padding: 32rpx;
+  color: #737373;
   font-size: 24rpx;
+  line-height: 1.5;
+  text-align: center;
 }
 </style>

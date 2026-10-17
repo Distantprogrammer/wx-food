@@ -30,9 +30,27 @@ function toDetailTip(doc) {
     _id: doc._id,
     title: doc.title,
     summary: doc.summary || '',
+    icon: doc.icon || '',
+    markdown: doc.markdown || '',
     markdownHtml: doc.markdownHtml || '',
+    updatedAt: doc.updatedAt || doc.updateTime || doc.createTime || null,
     images: doc.images || [],
     auditStatus: common.normalizeAuditStatus(doc.auditStatus)
+  }
+}
+
+async function findTip(raw) {
+  if (raw == null || raw === '') return null
+  const text = String(raw).trim()
+  if (/^\d+$/.test(text)) {
+    const res = await db.collection('tips').where({ tipId: Number(text) }).limit(1).get()
+    return res.data[0] || null
+  }
+  try {
+    const res = await db.collection('tips').doc(text).get()
+    return res.data || null
+  } catch (error) {
+    return null
   }
 }
 
@@ -48,10 +66,9 @@ exports.main = async (event) => {
     const action = event.action || 'list'
 
     if (action === 'detail') {
-      const tipId = Number(event.tipId || event.id)
-      if (!tipId) return common.fail('缺少 tipId', 400)
-      const res = await db.collection('tips').where({ tipId }).limit(1).get()
-      const doc = res.data[0]
+      const raw = event.tipId != null && event.tipId !== '' ? event.tipId : event.id
+      if (raw == null || raw === '') return common.fail('缺少 tipId', 400)
+      const doc = await findTip(raw)
       if (isHiddenTip(doc)) return common.fail('技巧不存在', 404)
       return common.ok(toDetailTip(doc))
     }
@@ -73,7 +90,8 @@ exports.main = async (event) => {
         summary: doc.summary || '',
         auditStatus: common.normalizeAuditStatus(doc.auditStatus),
         createTime: doc.createTime || null,
-        auditTime: doc.auditTime || null
+        auditTime: doc.auditTime || null,
+        rejectReason: doc.rejectReason || ''
       }))
       return common.ok({
         list,

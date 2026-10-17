@@ -12,6 +12,10 @@ export function toggleCooked(recipeId, options = { silent: true }) {
   return request('userRecipe', { action: 'toggleCooked', recipeId }, options)
 }
 
+export function markMade(recipeId, options = { silent: true }) {
+  return request('userRecipe', { action: 'markMade', recipeId }, options)
+}
+
 export function addHistory(recipeId, options = { silent: true }) {
   return request('userRecipe', { action: 'addHistory', recipeId }, options)
 }

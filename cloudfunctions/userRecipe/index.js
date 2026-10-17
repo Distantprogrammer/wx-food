@@ -10,22 +10,33 @@ const COLLECTIONS = {
   cooked: 'cooked'
 }
 
+function countFieldOf(collectionName) {
+  if (collectionName === 'likes') return 'likes'
+  if (collectionName === 'favorites') return 'favorites'
+  if (collectionName === 'cooked') return 'cooked'
+  return ''
+}
+
+async function shiftRecipeCount(recipeId, field, delta) {
+  if (!field) return null
+  const recipe = await db.collection('recipes').where({ recipeId }).limit(1).get()
+  const doc = recipe.data[0]
+  if (!doc) return null
+  const next = Math.max((doc[field] || 0) + delta, 0)
+  await db.collection('recipes').doc(doc._id).update({
+    data: { [field]: next, updateTime: db.serverDate() }
+  })
+  return next
+}
+
 async function toggle(collectionName, openid, recipeId) {
-  const countField = collectionName === 'likes' ? 'likes' : collectionName === 'favorites' ? 'favorites' : null
+  const countField = countFieldOf(collectionName)
   const col = db.collection(collectionName)
   const found = await col.where({ userId: openid, recipeId }).limit(1).get()
   if (found.data.length) {
     await col.doc(found.data[0]._id).remove()
-    if (countField) {
-      const recipe = await db.collection('recipes').where({ recipeId }).limit(1).get()
-      if (recipe.data[0]) {
-        const next = Math.max((recipe.data[0][countField] || 0) - 1, 0)
-        await db.collection('recipes').doc(recipe.data[0]._id).update({
-          data: { [countField]: next, updateTime: db.serverDate() }
-        })
-      }
-    }
-    return { active: false }
+    const count = await shiftRecipeCount(recipeId, countField, -1)
+    return { active: false, count }
   }
 
   await col.add({
@@ -35,15 +46,8 @@ async function toggle(collectionName, openid, recipeId) {
       createTime: db.serverDate()
     }
   })
-  if (countField) {
-    const recipe = await db.collection('recipes').where({ recipeId }).limit(1).get()
-    if (recipe.data[0]) {
-      await db.collection('recipes').doc(recipe.data[0]._id).update({
-        data: { [countField]: (recipe.data[0][countField] || 0) + 1, updateTime: db.serverDate() }
-      })
-    }
-  }
-  return { active: true }
+  const count = await shiftRecipeCount(recipeId, countField, 1)
+  return { active: true, count }
 }
 
 async function fetchRecipesByIds(ids) {
@@ -95,6 +99,36 @@ exports.main = async (event) => {
       const col = COLLECTIONS[key === 'like' ? 'like' : key === 'favorite' ? 'favorite' : 'cooked']
       const result = await toggle(col, openid, recipeId)
       return common.ok(result)
+    }
+
+    if (action === 'markMade') {
+      if (!recipeId) return common.fail('缺少 recipeId', 400)
+      const approved = await assertApprovedRecipe(recipeId)
+      if (!approved) return common.fail('菜谱不可用', 404)
+      const col = db.collection('cooked')
+      const found = await col.where({ userId: openid, recipeId }).limit(1).get()
+      const title = approved.title || '这道菜'
+      if (found.data.length) {
+        return common.ok({
+          active: true,
+          already: true,
+          count: approved.cooked || 0,
+          message: `「${title}」你已经做过啦`
+        })
+      }
+      await col.add({
+        data: { userId: openid, recipeId, createTime: db.serverDate() }
+      })
+      const count = (approved.cooked || 0) + 1
+      await db.collection('recipes').doc(approved._id).update({
+        data: { cooked: count, updateTime: db.serverDate() }
+      })
+      return common.ok({
+        active: true,
+        already: false,
+        count,
+        message: `完成「${title}」，已记入做过的菜`
+      })
     }
 
     if (action === 'addHistory') {

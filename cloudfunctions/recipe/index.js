@@ -123,7 +123,8 @@ exports.main = async (event) => {
       const list = (listRes.data || []).map((doc) => ({
         ...common.toListRecipe(doc),
         createTime: doc.createTime || null,
-        auditTime: doc.auditTime || null
+        auditTime: doc.auditTime || null,
+        rejectReason: doc.rejectReason || ''
       }))
       return common.ok({
         list,

@@ -1,62 +1,80 @@
 ﻿<template>
   <PageLayout
-    title="烹饪技巧"
     show-tab-bar
     active-tab="tips"
-    background-color="#F6F7F2"
-    :header-style="{ background: '#FFFFFF', color: '#1F2D2A', borderBottom: '1rpx solid #E5E9E3' }"
-    :header-content-height="88"
+    :show-header="false"
+    background-color="#F7F8FA"
+    :content-padding-x="0"
+    :content-padding-top="0"
   >
-    <template #header-content>
-      <view class="search-wrap">
-        <view class="search-row">
-          <view class="search-bar">
-            <image class="search-icon" src="/static/icons/search.png" mode="aspectFit" />
-            <input
-              v-model="keyword"
-              class="search-input"
-              placeholder="搜索技巧标题"
-              placeholder-class="search-ph"
-              confirm-type="search"
-              @confirm="reload"
-            />
-          </view>
-          <view class="add-btn" @click="goCreate">新增</view>
-        </view>
+    <view class="status-spacer" :style="{ height: statusBarHeight + 'px' }" />
+
+    <view class="page-head">
+      <text class="page-title">烹饪技巧</text>
+      <text class="page-sub">把火候、刀工和调味记下来</text>
+    </view>
+
+    <view class="search-row">
+      <view class="search-bar">
+        <view class="search-ico" />
+        <input
+          v-model="keyword"
+          class="search-input"
+          placeholder="搜索技巧标题"
+          placeholder-class="ph"
+          confirm-type="search"
+          @confirm="reload"
+        />
       </view>
-    </template>
+      <view class="add-btn" hover-class="is-pressed" :hover-stay-time="180" @click="goCreate">＋ 新增</view>
+    </view>
 
     <view class="tips-page">
-      <view v-if="!loading && !list.length" class="empty">暂无技巧文章</view>
+      <empty-state v-if="!loading && !list.length" title="暂无技巧文章" desc="换个关键词，或记下一条新技巧" />
+
       <view
-        v-for="(item, index) in list"
+        v-if="list.length"
+        class="hero"
+        hover-class="is-pressed"
+        :hover-stay-time="180"
+        @click="goDetail(list[0])"
+      >
+        <text class="hero-no">{{ String(1).padStart(2, '0') }}</text>
+        <text class="hero-title">{{ list[0].title }}</text>
+        <text class="hero-desc">{{ list[0].summary || '点击查看详情' }}</text>
+      </view>
+
+      <view
+        v-for="(item, index) in restList"
         :key="item.id"
-        class="article-row"
-        hover-class="article-row--pressed"
-        :hover-stay-time="120"
+        class="tip-card"
+        hover-class="is-pressed"
+        :hover-stay-time="180"
         @click="goDetail(item)"
       >
-        <view class="index-block">
-          <text class="index-num">{{ String(index + 1).padStart(2, '0') }}</text>
+        <view class="tip-no">
+          <text>{{ String(index + 2).padStart(2, '0') }}</text>
         </view>
-        <view class="info">
-          <text class="title">{{ item.title }}</text>
-          <text class="summary">{{ item.summary || '点击查看详情' }}</text>
+        <view class="tip-main">
+          <text class="tip-title">{{ item.title }}</text>
+          <text class="tip-sum">{{ item.summary || '点击查看详情' }}</text>
         </view>
-        <image class="arrow" src="/static/icons/chevron.png" mode="aspectFit" />
+        <view class="chevron" />
       </view>
     </view>
   </PageLayout>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import PageLayout from '@/components/page-layout/PageLayout.vue'
+import EmptyState from '@/components/empty-state/empty-state.vue'
 import { useTabPage } from '@/composables/useTabPage'
 import { useUserStore } from '@/store/user'
 import { getTipList } from '@/services/tip'
 import { showApiError } from '@/utils/apiError'
+import { getStatusBarHeight } from '@/utils/system'
 
 useTabPage('tips')
 
@@ -64,6 +82,8 @@ const userStore = useUserStore()
 const list = ref([])
 const loading = ref(false)
 const keyword = ref('')
+const statusBarHeight = getStatusBarHeight()
+const restList = computed(() => list.value.slice(1))
 
 async function load() {
   loading.value = true
@@ -84,7 +104,7 @@ function reload() {
 }
 
 function goDetail(item) {
-  uni.navigateTo({ url: `/subPackages/pkg-tips/detail/index?id=${item.id}` })
+  uni.navigateTo({ url: `/pages/tip-detail/index?id=${item.id || item._id}` })
 }
 
 function goCreate() {
@@ -98,143 +118,175 @@ function goCreate() {
 onShow(load)
 </script>
 
-<style lang="scss" scoped>
-@import '@/styles/variables.scss';
+<style scoped>
+.status-spacer {
+  width: 100%;
+}
 
-.search-wrap {
-  padding: 0 24rpx 16rpx;
-  background: $bg-card;
+.page-head {
+  padding: 16rpx 190rpx 32rpx 32rpx;
 }
 
 .search-row {
   display: flex;
   align-items: center;
-  gap: 12rpx;
+  gap: 24rpx;
+  padding: 0 32rpx;
 }
 
 .search-bar {
   flex: 1;
-  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  background: $bg-muted;
-  border: 1rpx solid $border-color;
-  border-radius: $radius-sm;
-  padding: 0 20rpx;
-  height: 68rpx;
-}
-
-.add-btn {
-  flex-shrink: 0;
-  height: 68rpx;
-  line-height: 68rpx;
-  padding: 0 22rpx;
-  border-radius: $radius-sm;
-  background: $primary-color;
-  color: #fff;
-  font-size: 26rpx;
-  font-weight: 650;
-}
-
-.search-icon {
-  width: 32rpx;
-  height: 32rpx;
-  flex-shrink: 0;
-  opacity: 0.65;
+  gap: 16rpx;
+  min-width: 0;
+  height: 76rpx;
+  padding: 0 32rpx;
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
 }
 
 .search-input {
   flex: 1;
   min-width: 0;
-  height: 68rpx;
-  line-height: 68rpx;
-  font-size: 26rpx;
-  color: $text-primary;
+  height: 48rpx;
+  color: #1A1A1A;
+  font-size: 28rpx;
+  line-height: 1.5;
 }
 
-.search-ph {
-  color: $text-light;
+.add-btn {
+  flex-shrink: 0;
+  height: 76rpx;
+  padding: 0 32rpx;
+  border-radius: 20rpx;
+  background: #2D6A4F;
+  color: #FFFFFF;
+  font-size: 24rpx;
+  font-weight: 700;
+  line-height: 76rpx;
+  transition: transform 180ms ease;
+}
+
+.add-btn.is-pressed {
+  transform: scale(0.98);
 }
 
 .tips-page {
-  padding-top: 4rpx;
+  padding: 40rpx 32rpx 48rpx;
 }
 
-.article-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 18rpx;
-  padding: 24rpx 20rpx;
-  margin-bottom: 14rpx;
-  background: $bg-card;
-  border-radius: $radius-md;
-  border: 1rpx solid $border-color;
+.hero,
+.tip-card {
+  transition: transform 180ms ease;
 }
 
-.article-row--pressed {
-  opacity: 0.92;
-  background: $bg-muted;
+.hero.is-pressed,
+.tip-card.is-pressed {
+  transform: scale(0.98);
 }
 
-.index-block {
-  width: 56rpx;
-  flex-shrink: 0;
-  padding-top: 4rpx;
+.hero {
+  position: relative;
+  margin-bottom: 40rpx;
+  padding: 48rpx;
+  overflow: hidden;
+  border-radius: 36rpx;
+  background-image: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+  box-shadow: 0 8rpx 32rpx rgba(45, 106, 79, 0.16);
 }
 
-.index-num {
+.hero-no {
+  position: absolute;
+  top: 16rpx;
+  right: 32rpx;
+  color: #D7EBE3;
+  font-size: 88rpx;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.hero-title {
   display: block;
-  font-size: 26rpx;
+  padding-right: 136rpx;
+  color: #FFFFFF;
+  font-size: 34rpx;
   font-weight: 700;
-  color: $primary-color;
-  letter-spacing: 1rpx;
-  line-height: 1.2;
+  line-height: 1.5;
 }
 
-.info {
+.hero-desc {
+  display: -webkit-box;
+  margin-top: 16rpx;
+  overflow: hidden;
+  color: #FFFFFF;
+  font-size: 24rpx;
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.tip-card {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  min-height: 88rpx;
+  margin-bottom: 40rpx;
+  padding: 32rpx;
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+}
+
+.tip-card:last-child {
+  margin-bottom: 0;
+}
+
+.tip-no {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 56rpx;
+  height: 40rpx;
+  padding: 0 8rpx;
+  border-radius: 10rpx;
+  background: #E8F3EE;
+  color: #2D6A4F;
+  font-size: 22rpx;
+  font-weight: 700;
+  line-height: 40rpx;
+  box-sizing: border-box;
+}
+
+.tip-main {
   flex: 1;
   min-width: 0;
 }
 
-.title {
+.tip-title {
   display: block;
-  font-size: 30rpx;
-  font-weight: 650;
-  color: $text-primary;
-  line-height: $line-tight;
-  margin-bottom: 8rpx;
   overflow: hidden;
+  color: #1A1A1A;
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
 }
 
-.summary {
+.tip-sum {
   display: block;
+  overflow: hidden;
+  color: #737373;
   font-size: 24rpx;
-  color: $text-secondary;
-  line-height: $line-base;
-  overflow: hidden;
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: nowrap;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.arrow {
-  width: 24rpx;
-  height: 24rpx;
-  flex-shrink: 0;
-  margin-top: 8rpx;
-  opacity: 0.55;
-}
-
-.empty {
-  padding: 80rpx 0;
-  text-align: center;
-  color: $text-light;
-  font-size: 26rpx;
 }
 </style>

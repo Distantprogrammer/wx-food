@@ -3,7 +3,7 @@
     class="recipe-card"
     :class="[`is-${variant}`]"
     hover-class="is-pressed"
-    :hover-stay-time="120"
+    :hover-stay-time="180"
     @click="$emit('click', recipe)"
   >
     <view class="cover">
@@ -12,7 +12,21 @@
     </view>
     <view class="body">
       <text class="name">{{ recipe.title }}</text>
-      <view v-if="showMeta" class="meta">
+      <view v-if="showMeta && metaMode === 'favorites'" class="meta">
+        <view class="diff">
+          <view class="dot" :class="diff.key" />
+          <text class="diff-text" :class="diff.key">{{ diff.text }}</text>
+        </view>
+        <text class="fav">♡ {{ recipe.favorites || 0 }}</text>
+      </view>
+      <view v-else-if="showMeta && metaMode === 'calories'" class="meta">
+        <view class="diff">
+          <view class="dot" :class="diff.key" />
+          <text class="diff-text" :class="diff.key">{{ diff.text }}</text>
+        </view>
+        <text v-if="recipe.calories" class="kcal">{{ recipe.calories }} kcal</text>
+      </view>
+      <view v-else-if="showMeta" class="meta meta-legacy">
         <text v-if="recipe.difficultyText || recipe.difficulty">{{ diff.text }}</text>
         <text v-if="recipe.calories">{{ recipe.calories }}kcal</text>
         <text v-if="recipe.likes">喜欢 {{ recipe.likes }}</text>
@@ -28,10 +42,13 @@ import { getRecipePlaceholder } from '@/utils/recipePlaceholder'
 
 const props = defineProps({
   recipe: { type: Object, required: true },
-  /** default | compact | rail */
+  /** default | compact | rail | tile | spotlight */
   variant: { type: String, default: 'default' },
   showBadge: { type: Boolean, default: true },
-  showMeta: { type: Boolean, default: true }
+  showMeta: { type: Boolean, default: true },
+  /** legacy | calories | favorites */
+  metaMode: { type: String, default: 'legacy' },
+  cover: { type: String, default: '' }
 })
 
 defineEmits(['click'])
@@ -41,10 +58,13 @@ const diff = computed(() => ({
   key: props.recipe.difficultyKey || getDifficulty(props.recipe.difficulty).key,
   text: props.recipe.difficultyText || getDifficulty(props.recipe.difficulty).text
 }))
-
 watch(
-  () => [props.recipe?.coverImage, props.recipe?.categorySlug],
-  async ([coverImage, categorySlug]) => {
+  () => [props.cover, props.recipe?.coverImage, props.recipe?.categorySlug],
+  async ([cover, coverImage, categorySlug]) => {
+    if (cover) {
+      coverSrc.value = cover
+      return
+    }
     const temp = await getCoverTempUrl(coverImage)
     coverSrc.value = temp || getRecipePlaceholder(categorySlug)
   },
@@ -52,96 +72,200 @@ watch(
 )
 </script>
 
-<style lang="scss" scoped>
-@import '@/styles/variables.scss';
-
+<style scoped>
 .recipe-card {
-  background: $bg-card;
-  border-radius: $radius-md;
+  width: 100%;
+  min-width: 0;
+  background: #FFFFFF;
+  border-radius: 28rpx;
   overflow: hidden;
-  border: 1rpx solid $border-color;
-  transition: opacity $duration-fast $ease-out;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  transition: transform 180ms ease;
+}
 
-  &.is-pressed {
-    opacity: 0.88;
-  }
+.recipe-card.is-pressed {
+  transform: scale(0.98);
 }
 
 .cover {
   position: relative;
   width: 100%;
-  height: 220rpx;
-  background: $bg-muted;
+  height: 320rpx;
+  overflow: hidden;
+  background: #f7f8fa;
 }
 
 .is-compact .cover {
   height: 180rpx;
 }
 
-.is-rail .cover {
+.is-rail .cover,
+.is-tile .cover {
   height: 200rpx;
+}
+
+.is-spotlight .cover {
+  height: 280rpx;
 }
 
 .cover-img {
   width: 100%;
-  height: 100%;
-  background: $bg-soft;
+  height: 320rpx;
+  display: block;
+}
+
+.is-compact .cover-img {
+  height: 180rpx;
+}
+
+.is-rail .cover-img,
+.is-tile .cover-img {
+  height: 200rpx;
+}
+
+.is-spotlight .cover-img {
+  height: 280rpx;
+}
+
+.is-tile {
+  border-radius: 24rpx;
 }
 
 .badge {
   position: absolute;
-  top: 12rpx;
-  left: 12rpx;
-  padding: 4rpx 14rpx;
-  border-radius: $radius-sm;
-  font-size: 20rpx;
+  top: 16rpx;
+  left: 16rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 6rpx;
+  background: #FFFFFF;
+  color: #1A1A1A;
+  font-size: 22rpx;
   font-weight: 600;
-  color: $text-primary;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1rpx solid $border-color;
+  line-height: 1.5;
+}
 
-  &.easy { color: $success-color; }
-  &.medium { color: #B8821A; }
-  &.hard { color: $accent-tomato; }
+.badge.easy {
+  color: #52C41A;
+}
+
+.badge.medium {
+  color: #FAAD14;
+}
+
+.badge.hard {
+  color: #F5222D;
 }
 
 .body {
-  padding: 16rpx 18rpx 18rpx;
-  min-height: 108rpx;
+  padding: 12rpx 20rpx 16rpx;
   box-sizing: border-box;
 }
 
-.is-compact .body {
-  padding: 12rpx 14rpx 14rpx;
-  min-height: 96rpx;
-}
-
-.is-rail .body {
-  min-height: 100rpx;
-}
-
 .name {
-  display: block;
-  font-size: 28rpx;
-  font-weight: 650;
-  color: $text-primary;
-  line-height: $line-tight;
+  display: -webkit-box;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-bottom: 8rpx;
+  color: #1A1A1A;
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 40rpx;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-.is-compact .name {
-  font-size: 26rpx;
+.is-compact .name,
+.is-rail .name,
+.is-tile .name,
+.is-spotlight .name {
+  display: block;
+  min-height: 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.is-tile .body {
+  padding: 12rpx 16rpx 16rpx;
+}
+
+.meta-legacy {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  color: #737373;
+  font-size: 22rpx;
+  line-height: 1.5;
 }
 
 .meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8rpx 16rpx;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8rpx;
+  min-width: 0;
+  margin-top: 8rpx;
+}
+
+.diff {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  min-width: 0;
+  flex: 1;
+}
+
+.dot {
+  width: 16rpx;
+  height: 16rpx;
+  flex-shrink: 0;
+  border-radius: 999rpx;
+  background: #B3B3B3;
+}
+
+.dot.easy {
+  background: #2E9E4F;
+}
+
+.dot.medium {
+  background: #E6A23C;
+}
+
+.dot.hard {
+  background: #E24B4B;
+}
+
+.diff-text,
+.fav,
+.kcal {
+  color: #737373;
   font-size: 22rpx;
-  color: $text-light;
-  line-height: 1.3;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.diff-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.diff-text.easy {
+  color: #2E9E4F;
+}
+
+.diff-text.medium {
+  color: #C47E10;
+}
+
+.diff-text.hard {
+  color: #E24B4B;
+}
+
+.fav,
+.kcal {
+  flex-shrink: 0;
+}
+
+.kcal {
+  padding: 4rpx 12rpx;
+  background: #F7F8FA;
+  border-radius: 8rpx;
 }
 </style>

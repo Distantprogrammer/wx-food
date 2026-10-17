@@ -17,6 +17,9 @@ function toFeedbackItem(doc) {
     id: doc._id,
     contact: doc.contact || '',
     content: doc.content || '',
+    type: doc.type || 'other',
+    images: Array.isArray(doc.images) ? doc.images : [],
+    reply: doc.reply || '',
     status,
     isRead: status !== 'pending',
     readTime: doc.readTime || null,
@@ -34,6 +37,8 @@ exports.main = async (event) => {
     if (action === 'submit') {
       const content = String(event.content || '').trim()
       const contact = String(event.contact || '').trim()
+      const type = ['idea', 'bug', 'fix', 'other'].includes(event.type) ? event.type : 'other'
+      const images = (Array.isArray(event.images) ? event.images : []).map((item) => String(item || '').trim()).filter(Boolean).slice(0, 3)
       if (!content) return common.fail('请填写反馈内容', 400)
       if (content.length > 1000) return common.fail('反馈内容不能超过1000字', 400)
       if (contact.length > 40) return common.fail('联系方式不能超过40字', 400)
@@ -45,6 +50,9 @@ exports.main = async (event) => {
           nickname: user.nickname || '',
           contact,
           content,
+          type,
+          images,
+          reply: '',
           status: 'pending',
           isRead: false,
           readTime: null,

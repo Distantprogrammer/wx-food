@@ -1,0 +1,66 @@
+.tab-tokens {
+  --tab-inactive: #A3ABB0;
+  --brand: #2D6A4F;
+  --brand-light: #E8F3EE;
+}
+
+.page-title {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  color: #1a1a1a;
+  font-size: 48rpx;
+  font-weight: 700;
+  line-height: 72rpx;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.page-sub {
+  display: block;
+  max-width: 100%;
+  margin-top: 8rpx;
+  overflow: hidden;
+  color: #737373;
+  font-size: 26rpx;
+  font-weight: 400;
+  line-height: 40rpx;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.chevron {
+  width: 16rpx;
+  height: 16rpx;
+  flex-shrink: 0;
+  border-top: 3rpx solid #b3b3b3;
+  border-right: 3rpx solid #b3b3b3;
+  transform: rotate(45deg);
+}
+
+.search-ico {
+  position: relative;
+  width: 28rpx;
+  height: 28rpx;
+  flex-shrink: 0;
+  border: 3rpx solid #b3b3b3;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.search-ico::after {
+  content: "";
+  position: absolute;
+  right: -8rpx;
+  bottom: -2rpx;
+  width: 12rpx;
+  height: 3rpx;
+  background: #b3b3b3;
+  border-radius: 4rpx;
+  transform: rotate(45deg);
+}
+
+.ph {
+  color: #b3b3b3;
+  font-size: 28rpx;
+}

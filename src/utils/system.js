@@ -20,8 +20,8 @@ export const DEVICE_BOUNDS = {
   windowHeight: { min: 568, max: 1200 }
 }
 
-/** CustomTabBar 内容区高度（rpx，与组件 .tabbar-content 保持一致） */
-export const TAB_BAR_HEIGHT_RPX = 120
+/** CustomTabBar 内容区高度（rpx，与组件 .tabbar-content、--tab-h 保持一致） */
+export const TAB_BAR_HEIGHT_RPX = 152
 
 const DESIGN_WIDTH = 750
 

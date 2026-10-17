@@ -2,91 +2,83 @@
   <PageLayout
     show-tab-bar
     active-tab="home"
-    :header-style="{ background: '#F6F7F2', color: '#1F2D2A', borderBottom: '1rpx solid #E5E9E3' }"
-    background-color="#F6F7F2"
+    :show-header="false"
+    background-color="#F7F8FA"
     :content-padding-x="0"
+    :content-padding-top="0"
     :refresher-enabled="true"
     :refresher-triggered="refreshing"
     @refresherrefresh="onRefresh"
   >
-    <template #header-left>
-      <view class="greeting">
-        <text class="text">{{ greeting.text }}</text>
-        <text class="icon">{{ greeting.icon }}</text>
-      </view>
-    </template>
-    <view class="home-header">
-      <view class="meal-line">
-        <!-- <text class="meal-label">本餐推荐</text> -->
-        <!-- <text class="meal-title">{{ greeting.meal }}</text> -->
-        <text class="meal-sub">为您精选 {{ greeting.meal }} 菜谱</text>
-      </view>
+    <view class="status-spacer" :style="{ height: statusBarHeight + 'px' }" />
+
+    <view class="home-head">
+      <text class="page-title">{{ greeting.text }} {{ greeting.icon }}</text>
+      <text class="page-sub">为您精选 {{ greeting.meal }} 菜谱</text>
     </view>
 
-    <view class="section section--rail">
+    <view class="rail-block">
+      <view class="rail-head">
+        <section-head title="推荐精选" />
+      </view>
       <scroll-view scroll-x class="h-scroll" :show-scrollbar="false">
         <view class="h-list">
           <view v-for="item in recommend" :key="item.id" class="h-item">
-            <RecipeCard :recipe="item" variant="rail" @click="goDetail" />
+            <RecipeCard
+              :recipe="item"
+              variant="rail"
+              meta-mode="calories"
+              :show-badge="false"
+              @click="goDetail"
+            />
           </view>
         </view>
       </scroll-view>
     </view>
 
-    <view class="section">
-      <view class="section-head">
-        <text class="section-title">随机选菜</text>
-      </view>
-      <view class="random-panel">
-        <view class="random-stage">
-          <!-- 翻牌过程只用轻量卡片，避免频繁重建 RecipeCard / 拉封面 -->
-          <view v-if="spinning" class="spin-card flipping">
-            <view class="spin-cover" />
-            <view class="spin-body">
-              <text class="spin-name">{{ flashTitle || '挑选中…' }}</text>
-              <text class="spin-meta">正在翻牌</text>
-            </view>
-          </view>
-          <view v-else-if="randomRecipe" class="random-card-wrap">
-            <RecipeCard :recipe="randomRecipe" variant="rail" @click="goDetail" />
-          </view>
-          <view v-else class="random-placeholder">
-            <view class="ph-cover" />
-            <view class="ph-body">
-              <text class="ph-title">点击下方开始随机</text>
-              <text class="ph-sub">从今日精选中抽出一道菜</text>
-            </view>
-          </view>
+    <view class="block">
+      <view class="random-card">
+        <view v-if="spinning" class="spin-line">
+          <text class="dice busy">🎲</text>
+          <text class="random-title">{{ flashTitle || '挑选中…' }}</text>
+          <text class="random-sub">正在从推荐精选里翻牌</text>
         </view>
-        <view class="random-actions">
+        <view v-else-if="randomRecipe" class="random-result">
+          <RecipeCard :recipe="randomRecipe" variant="spotlight" :show-badge="false" meta-mode="calories" @click="goDetail" />
+        </view>
+        <view v-else class="spin-line">
+          <text class="dice">🎲</text>
+          <text class="random-title">帮我随机</text>
+          <text class="random-sub">不知道吃什么，交给今天的运气</text>
+        </view>
+        <view class="random-actions" :class="{ split: randomRecipe && !spinning }">
           <button
             v-if="randomRecipe && !spinning"
-            class="btn-ghost"
+            class="cta cta-ghost"
             @click="goDetail(randomRecipe)"
           >查看菜谱</button>
-          <button class="btn-primary" :class="{ busy: spinning }" :disabled="spinning" @click="onSpin">
+          <button class="cta" :class="{ busy: spinning }" :disabled="spinning" @click="onSpin">
             {{ spinning ? '挑选中…' : randomRecipe ? '再随机一次' : '帮我随机' }}
           </button>
         </view>
       </view>
     </view>
 
-    <view class="section">
-      <view class="section-head">
-        <text class="section-title">热门菜谱</text>
-        <view class="section-more" @click="goCategory">
-          <text>查看更多</text>
-          <image class="more-arrow" src="/static/icons/chevron.png" mode="aspectFit" />
-        </view>
-      </view>
+    <view class="block">
+      <section-head title="热门菜谱" more="查看更多" @more="goCategory" />
       <view class="grid">
-        <view v-for="item in hot" :key="item.id" class="grid-item">
-          <RecipeCard :recipe="item" variant="compact" @click="goDetail" />
-        </view>
+        <RecipeCard
+          v-for="item in hot"
+          :key="item.id"
+          :recipe="item"
+          meta-mode="calories"
+          :show-badge="false"
+          @click="goDetail"
+        />
       </view>
     </view>
 
-    <view v-if="needSeed && isAdmin" class="seed-tip" @click="goSeed">
+    <view v-if="needSeed && isAdmin" class="seed-tip" hover-class="is-pressed" :hover-stay-time="180" @click="goSeed">
       <text>云库暂无菜谱数据，点此导入种子（自动审核通过）</text>
     </view>
   </PageLayout>
@@ -96,17 +88,20 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import PageLayout from '@/components/page-layout/PageLayout.vue'
 import RecipeCard from '@/components/RecipeCard/RecipeCard.vue'
+import SectionHead from '@/components/section-head/section-head.vue'
 import { useUserStore } from '@/store/user'
 import { useTabPage } from '@/composables/useTabPage'
 import { getHome, getRandomRecipe } from '@/services/recipe'
 import { getGreeting } from '@/utils/index'
 import { showApiError } from '@/utils/apiError'
+import { getStatusBarHeight } from '@/utils/system'
 
 useTabPage('home')
 
 const userStore = useUserStore()
 const isAdmin = computed(() => userStore.isAdmin)
 const greeting = getGreeting()
+const statusBarHeight = getStatusBarHeight()
 
 const recommend = ref([])
 const hot = ref([])
@@ -156,7 +151,7 @@ function clearSpinTimer() {
 
 async function onSpin() {
   if (spinning.value) return
-  // 先卸掉 RecipeCard，避免翻牌过程加载封面图
+  // 先卸掉结果，避免翻牌过程加载封面图
   randomRecipe.value = null
   spinning.value = true
   clearSpinTimer()
@@ -224,269 +219,178 @@ onMounted(load)
 onBeforeUnmount(clearSpinTimer)
 </script>
 
-<style lang="scss" scoped>
-@import '@/styles/variables.scss';
-
-.home-header {
-  padding: 8rpx $page-padding-x 8rpx;
+<style scoped>
+.status-spacer {
+  width: 100%;
 }
 
-.greeting {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  min-width: 0;
-  margin-bottom: 20rpx;
+.home-head {
+  padding: 16rpx 190rpx 32rpx 32rpx;
 }
 
-.greeting .text {
-  font-size: 40rpx;
-  font-weight: 700;
-  color: $text-primary;
-  line-height: $line-tight;
+.rail-block {
+  width: 100%;
+  padding-top: 8rpx;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
 }
 
-.greeting .icon {
-  font-size: 32rpx;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.meal-line {
-  padding: 8rpx 0 12rpx;
-}
-
-.meal-label {
-  display: block;
-  font-size: 22rpx;
-  font-weight: 600;
-  color: $primary-color;
-  letter-spacing: 1rpx;
-  margin-bottom: 6rpx;
-}
-
-.meal-title {
-  display: block;
-  font-size: 34rpx;
-  font-weight: 700;
-  color: $text-primary;
-  line-height: $line-tight;
-  margin-bottom: 6rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.meal-sub {
-  display: block;
-  font-size: 24rpx;
-  color: $text-secondary;
-  line-height: $line-base;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.section {
-  padding: 0 $page-padding-x;
-  margin-bottom: 36rpx;
-}
-
-.section--rail {
-  padding-right: 0;
-}
-
-.section-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18rpx;
-  gap: 16rpx;
-}
-
-.section-title {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: $text-primary;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.section-more {
-  display: flex;
-  align-items: center;
-  gap: 2rpx;
-  flex-shrink: 0;
-  font-size: 24rpx;
-  color: $text-secondary;
-}
-
-.more-arrow {
-  width: 24rpx;
-  height: 24rpx;
-  flex-shrink: 0;
-  margin-left: 2rpx;
-  opacity: 0.7;
-}
-
-.btn-ghost,
-.btn-primary {
-  flex: 1;
-  min-width: 0;
-  height: $btn-height;
-  line-height: $btn-height;
-  text-align: center;
-  font-size: $btn-font;
-  font-weight: 650;
-  border-radius: $btn-radius;
-}
-
-.btn-ghost {
-  background: $bg-muted;
-  color: $text-primary;
-  border: 1rpx solid $border-color;
-
-  &:active {
-    opacity: 0.86;
-  }
-}
-
-.btn-primary {
-  background: $primary-color;
-  color: $text-white;
-
-  &:active {
-    background: $primary-hover;
-  }
-
-  &.busy,
-  &[disabled] {
-    opacity: 0.72;
-  }
+.rail-head {
+  padding: 0 32rpx;
 }
 
 .h-scroll {
+  width: 100%;
   white-space: nowrap;
 }
 
 .h-list {
   display: inline-flex;
-  gap: 16rpx;
-  padding-right: $page-padding-x;
+  padding: 0 32rpx 8rpx;
 }
 
 .h-item {
   width: 300rpx;
   flex-shrink: 0;
+  margin-right: 20rpx;
 }
 
-.random-panel {
-  background: $bg-card;
-  border: 1rpx solid $border-color;
-  border-radius: $radius-md;
-  padding: $card-padding;
+.h-item:last-child {
+  margin-right: 0;
 }
 
-.random-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 20rpx;
-  padding: 12rpx 0 4rpx;
+.block {
+  padding: 32rpx 32rpx 0;
 }
 
-.random-card-wrap,
-.spin-card,
-.random-placeholder {
-  width: 300rpx;
-}
-
-.spin-card,
-.random-placeholder {
-  background: $bg-card;
-  border: 1rpx solid $border-color;
-  border-radius: $radius-md;
-  overflow: hidden;
-}
-
-.spin-card.flipping {
-  animation: cardFlip 0.16s ease-in-out infinite alternate;
-}
-
-.spin-cover,
-.ph-cover {
-  height: 200rpx;
-  background: linear-gradient(135deg, $bg-soft 0%, $bg-muted 100%);
-}
-
-.spin-body,
-.ph-body {
-  padding: 16rpx 18rpx 20rpx;
-  min-height: 100rpx;
-  box-sizing: border-box;
-}
-
-.spin-name,
-.ph-title {
-  display: block;
-  font-size: 28rpx;
-  font-weight: 700;
-  color: $text-primary;
-  margin-bottom: 6rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.spin-meta,
-.ph-sub {
-  display: block;
-  font-size: 22rpx;
-  color: $text-light;
-}
-
-.random-placeholder {
-  border-style: dashed;
-  background: $bg-muted;
-}
-
-.random-actions {
-  display: flex;
-  gap: 16rpx;
-}
-
-@keyframes cardFlip {
-  from {
-    transform: translateY(4rpx) scale(0.98);
-    opacity: 0.82;
-  }
-  to {
-    transform: translateY(-4rpx) scale(1);
-    opacity: 1;
-  }
+.block:last-of-type {
+  padding-bottom: 32rpx;
 }
 
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: $list-gap;
+  gap: 24rpx;
+}
+
+.random-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  margin: 8rpx 0 0;
+  padding: 24rpx;
+  overflow: hidden;
+  border-radius: 36rpx;
+  background-image: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+  box-shadow: 0 8rpx 32rpx rgba(45, 106, 79, 0.16);
+  text-align: center;
+}
+
+.spin-line,
+.random-result {
+  width: 100%;
+}
+
+.random-result {
+  text-align: left;
+}
+
+.dice {
+  font-size: 48rpx;
+  line-height: 1;
+}
+
+.dice.busy {
+  animation: dice-bob 180ms ease infinite alternate;
+}
+
+.random-title {
+  display: block;
+  max-width: 100%;
+  margin-top: 12rpx;
+  overflow: hidden;
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.random-sub {
+  display: block;
+  margin-top: 8rpx;
+  color: #FFFFFF;
+  font-size: 24rpx;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.random-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  width: 100%;
+  margin-top: 20rpx;
+}
+
+.random-actions.split {
+  flex-direction: row;
+}
+
+.cta {
+  box-sizing: border-box;
+  flex: 1;
+  width: 100%;
+  max-width: 100%;
+  height: 72rpx;
+  margin: 0;
+  padding: 0 24rpx;
+  border-radius: 16rpx;
+  background: #FFFFFF;
+  color: #2D6A4F;
+  font-size: 26rpx;
+  font-weight: 700;
+  line-height: 72rpx;
+  text-align: center;
+}
+
+.cta.busy,
+.cta[disabled] {
+  opacity: 0.72;
+}
+
+.cta-ghost {
+  background: rgba(255, 255, 255, 0.16);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.45);
 }
 
 .seed-tip {
-  margin: 0 $page-padding-x 40rpx;
-  padding: 22rpx 24rpx;
-  background: $primary-soft;
-  color: $primary-color;
-  border-radius: $radius-sm;
-  border: 1rpx solid rgba(23, 107, 74, 0.16);
+  margin: 48rpx 32rpx 32rpx;
+  padding: 24rpx 32rpx;
+  border-radius: 20rpx;
+  background: #E8F3EE;
+  color: #2D6A4F;
+  font-size: 24rpx;
+  font-weight: 500;
+  line-height: 1.5;
   text-align: center;
-  font-size: 26rpx;
-  line-height: $line-base;
+  transition: transform 180ms ease;
+}
+
+.seed-tip.is-pressed {
+  transform: scale(0.98);
+}
+
+@keyframes dice-bob {
+  from {
+    transform: translateY(8rpx);
+  }
+  to {
+    transform: translateY(-8rpx);
+  }
 }
 </style>

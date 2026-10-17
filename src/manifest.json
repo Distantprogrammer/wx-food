@@ -31,8 +31,7 @@
       "minified": true
     },
     "usingComponents": true,
-    "cloudfunctionRoot": "cloudfunctions/",
-    "lazyCodeLoading": "requiredComponents"
+    "cloudfunctionRoot": "cloudfunctions/"
   },
   "vueVersion": "3"
 }

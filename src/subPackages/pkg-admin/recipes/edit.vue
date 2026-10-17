@@ -48,7 +48,31 @@
 
       <HtmlBlockEditor v-model="form.ingredientsHtml" title="原料和工具" />
       <HtmlBlockEditor v-model="form.calculationHtml" title="计算" />
-      <HtmlBlockEditor v-model="form.stepsHtml" title="步骤" />
+
+      <view class="field">
+        <text class="label">步骤动作</text>
+        <view v-for="(step, index) in form.steps" :key="index" class="step-edit">
+          <view class="action-row">
+            <view
+              v-for="action in stepActions"
+              :key="action.key"
+              class="action-chip"
+              :class="{ on: step.actionKey === action.key }"
+              :style="step.actionKey === action.key ? { background: action.color, color: action.colorDeep } : {}"
+              @click="pickAction(index, action)"
+            >{{ action.icon }} {{ action.actionTitle }}</view>
+          </view>
+          <view class="emoji-line">
+            <input v-model="step.icon" class="emoji-input" maxlength="8" />
+            <input v-model="step.actionTitle" class="input grow" placeholder="动作标题" />
+          </view>
+          <textarea v-model="step.text" class="textarea" auto-height placeholder="这一步怎么做，关键数字会自动高亮" />
+          <text class="step-del" @click="removeStep(index)">删除这步</text>
+        </view>
+        <view class="add-step" @click="addStep">添加步骤</view>
+      </view>
+
+      <HtmlBlockEditor v-model="form.stepsHtml" title="步骤原文" />
       <HtmlBlockEditor v-model="form.notesHtml" title="补充说明" />
     </view>
 
@@ -79,6 +103,7 @@ import { adminRecipeDetail, adminRecipeSave, adminCategoryList } from '@/service
 import { uploadCloudFile } from '@/utils/cloud'
 import { getCoverTempUrl, getDifficulty } from '@/utils/index'
 import { showApiError } from '@/utils/apiError'
+import { STEP_ACTIONS, stepForEditor } from '@/utils/recipeCook'
 
 const allowUserSubmit = ref(false)
 useAdminGuard({ allowUserSubmit: () => allowUserSubmit.value })
@@ -102,8 +127,11 @@ const form = reactive({
   calculationHtml: '',
   stepsHtml: '',
   notesHtml: '',
-  auditStatus: 'approved'
+  auditStatus: 'approved',
+  steps: []
 })
+
+const stepActions = STEP_ACTIONS
 
 const previewRecipe = computed(() => {
   const diff = getDifficulty(form.difficulty)
@@ -122,9 +150,42 @@ const previewRecipe = computed(() => {
     ingredientsHtml: form.ingredientsHtml,
     calculationHtml: form.calculationHtml,
     stepsHtml: form.stepsHtml,
-    notesHtml: form.notesHtml
+    notesHtml: form.notesHtml,
+    steps: cleanSteps()
   }
 })
+
+function cleanSteps() {
+  return form.steps
+    .map((step) => ({
+      actionKey: step.actionKey,
+      actionTitle: String(step.actionTitle || '').trim(),
+      icon: step.icon,
+      color: step.color,
+      colorDeep: step.colorDeep,
+      text: String(step.text || '').trim(),
+      tip: String(step.tip || '').trim()
+    }))
+    .filter((step) => step.text || step.actionTitle)
+}
+
+function addStep() {
+  form.steps.push(stepForEditor({ actionKey: 'cook', text: '' }))
+}
+
+function removeStep(index) {
+  form.steps.splice(index, 1)
+}
+
+function pickAction(index, action) {
+  const step = form.steps[index]
+  const wasPreset = STEP_ACTIONS.some((item) => item.actionTitle === step.actionTitle)
+  step.actionKey = action.key
+  step.icon = action.icon
+  step.color = action.color
+  step.colorDeep = action.colorDeep
+  if (!step.actionTitle || wasPreset) step.actionTitle = action.actionTitle
+}
 
 function openPreview() {
   if (!String(form.title || '').trim()) {
@@ -231,6 +292,7 @@ async function loadDetail(id) {
     form.stepsHtml = d.stepsHtml || ''
     form.notesHtml = d.notesHtml || ''
     form.auditStatus = d.auditStatus || 'approved'
+    form.steps = Array.isArray(d.steps) ? d.steps.map(stepForEditor) : []
   } catch (e) {
     showApiError(e, '加载失败')
   } finally {
@@ -245,7 +307,7 @@ async function onSave() {
   }
   saving.value = true
   try {
-    const res = await adminRecipeSave({ ...form })
+    const res = await adminRecipeSave({ ...form, steps: cleanSteps() })
     if (res.code === 200) {
       uni.showToast({
         title: form.auditStatus === 'pending' ? '已提交审核' : '已保存',
@@ -377,4 +439,55 @@ onLoad(async (q) => {
   }
 }
 .empty { text-align: center; color: #8A9590; padding: 80rpx; }
+.step-edit {
+  margin-bottom: 16rpx;
+  padding: 16rpx;
+  background: #FFFFFF;
+  border-radius: 16rpx;
+}
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+.action-chip {
+  margin: 0 12rpx 12rpx 0;
+  padding: 8rpx 16rpx;
+  border-radius: 999rpx;
+  background: #F3F4F6;
+  color: #1A1A1A;
+  font-size: 22rpx;
+  line-height: 36rpx;
+}
+.emoji-line {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+.emoji-input {
+  width: 88rpx;
+  height: 80rpx;
+  margin-right: 12rpx;
+  padding: 0;
+  background: #F6F7F2;
+  border-radius: 16rpx;
+  font-size: 36rpx;
+  text-align: center;
+}
+.grow { flex: 1; }
+.step-del {
+  display: block;
+  margin-top: 8rpx;
+  color: #E5484D;
+  font-size: 24rpx;
+}
+.add-step {
+  height: 72rpx;
+  border-radius: 16rpx;
+  background: #E8F3EE;
+  color: #2D6A4F;
+  font-size: 26rpx;
+  font-weight: 700;
+  line-height: 72rpx;
+  text-align: center;
+}
 </style>

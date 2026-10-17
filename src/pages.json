@@ -15,6 +15,13 @@
       }
     },
     {
+      "path": "pages/tip-detail/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "技巧详情"
+      }
+    },
+    {
       "path": "pages/category/index",
       "style": {
         "navigationStyle": "custom",
@@ -190,17 +197,17 @@
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "今天做什么菜",
     "navigationBarBackgroundColor": "#FFFFFF",
-    "backgroundColor": "#F6F7F2",
+    "backgroundColor": "#F7F8FA",
     "enableShareAppMessage": true,
     "enableShareTimeline": true,
     "app-plus": {
-      "background": "#F6F7F2"
+      "background": "#F7F8FA"
     }
   },
   "tabBar": {
     "custom": true,
-    "color": "#8A9590",
-    "selectedColor": "#176B4A",
+    "color": "#B3B3B3",
+    "selectedColor": "#2D6A4F",
     "borderStyle": "black",
     "backgroundColor": "#FFFFFF",
     "list": [
