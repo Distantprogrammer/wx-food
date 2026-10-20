@@ -1,0 +1,22 @@
+<%- include('partials/header', { title: '发表记录' }) %>
+<div class="page-heading"><div><p class="eyebrow">文章档案</p><h1>发表记录</h1></div><span>共 <%= total %> 条</span></div>
+<div class="filter-bar">
+  <% const filters = [['', '全部'], ['published', '已发表'], ['publishing', '处理中'], ['draft', '草稿'], ['needs_review', '需核对']]; %>
+  <% for (const [key, label] of filters) { %><a class="<%= status === key ? 'active' : '' %>" href="/history<%= key ? '?status=' + key : '' %>"><%= label %></a><% } %>
+</div>
+<section class="card history-card">
+  <% if (!rows.length) { %><p class="empty">暂无记录。</p><% } %>
+  <% for (const row of rows) { %>
+    <div class="history-row">
+      <div class="history-main"><div class="history-title"><a href="/recipes/<%= row.recipe_id %>?template=<%= row.template_id %>">#<%= row.recipe_id %> <%= row.title %></a><span class="pill <%= row.status === 'published' ? 'green' : '' %>"><%= statusLabel(row.status) %></span></div><p class="muted"><%= row.publish_date %> · <%= row.source === 'timer' ? '自动任务' : '管理员' %> · <%= templateName(row.template_id) %></p><% if (row.last_error) { %><p class="error-text"><%= row.last_error %></p><% } %></div>
+      <div class="history-buttons">
+        <% if (row.article_url) { %><a class="button ghost" href="<%= row.article_url %>" target="_blank" rel="noopener noreferrer">查看文章</a><% } %>
+        <% if (row.publish_id && row.status !== 'published') { %><form method="post" action="/refresh/<%= row.id %>" data-wechat data-loading="正在查询微信状态，请稍候…"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="button ghost" type="submit">查状态</button></form><% } %>
+        <% if (row.status === 'draft') { %><a class="button ghost" href="/recipes/<%= row.recipe_id %>?template=<%= row.template_id %>">更改</a><form method="post" action="/drafts/<%= row.id %>/delete" data-wechat data-loading="正在删除草稿，请稍候…" onsubmit="return confirm('确定删除公众号里的这篇草稿？删除后可以重新生成。')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="button danger" type="submit">删除草稿</button></form><form method="post" action="/publish/<%= row.recipe_id %>" data-wechat data-loading="正在提交发表，请稍候…" onsubmit="return confirm('<%= publishedIds.has(row.recipe_id) ? '这道菜已经发表过，确定要再发一篇吗？' : '确认发表这篇草稿？' %>')"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="templateId" value="<%= row.template_id %>"><input type="hidden" name="republish" value="<%= publishedIds.has(row.recipe_id) ? '1' : '0' %>"><button class="button secondary" type="submit">发表草稿</button></form><% } %>
+        <% if (row.status === 'needs_review' && !row.draft_media_id && !row.publish_id) { %><form method="post" action="/release/<%= row.id %>" onsubmit="return confirm('请先确认公众号后台没有这篇文章。确定解除占用？')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="button danger" type="submit">解除占用</button></form><% } %>
+      </div>
+    </div>
+  <% } %>
+</section>
+<div class="pagination"><% if (page > 1) { %><a href="/history?page=<%= page - 1 %><%= status ? '&status=' + status : '' %>">‹ 上一页</a><% } %><span>第 <%= page %> 页</span><% if (page * limit < total) { %><a href="/history?page=<%= page + 1 %><%= status ? '&status=' + status : '' %>">下一页 ›</a><% } %></div>
+<%- include('partials/footer') %>

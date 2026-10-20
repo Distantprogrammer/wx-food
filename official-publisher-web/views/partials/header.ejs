@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> · 今天做什么菜</title>
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container nav-inner">
+    <a class="brand" href="/"><span class="brand-mark">🍳</span><span>今天做什么菜 <small>公众号发文台</small></span></a>
+    <nav><a href="/">工作台</a><a href="/history">发表记录</a></nav>
+    <form method="post" action="/logout"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="link-button" type="submit">退出</button></form>
+  </div>
+</header>
+<main class="container">
+  <% if (notice) { %><div class="alert success"><%= notice %></div><% } %>
+  <% if (error) { %><div class="alert error"><%= error %></div><% } %>

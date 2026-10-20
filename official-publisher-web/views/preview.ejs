@@ -1,0 +1,56 @@
+<%- include('partials/header', { title: article.title }) %>
+<div class="page-heading"><a href="/">‹ 返回工作台</a><span>菜品 #<%= recipe.recipeId %></span></div>
+<div class="grid preview-grid">
+  <section class="card article-shell">
+    <div class="cover-frame"><img src="/covers/<%= recipe.recipeId %>" alt="文章封面"></div>
+    <% if (cover.fallback) { %><p class="hint">本地未找到对应菜品照片，发表时将使用通用品牌封面。可将同名图片放入项目 images 目录。</p><% } %>
+    <div class="article-fields">
+      <label for="articleTitle">公众号标题</label>
+      <input id="articleTitle" value="<%= article.title %>" maxlength="64" autocomplete="off">
+      <label for="articleDigest">摘要</label>
+      <textarea id="articleDigest" maxlength="120" rows="3"><%= article.digest %></textarea>
+    </div>
+    <div id="articleBody" class="article-content"><%- article.content %></div>
+  </section>
+  <aside class="card action-panel">
+    <h2>文章操作</h2>
+    <button id="editArticle" class="button ghost full" type="button" aria-pressed="false">编辑文章</button>
+    <p class="hint edit-hint">可以修改标题、摘要和正文。完成后点「完成编辑」，再存草稿、更新或发表。</p>
+    <form method="get" action="/recipes/<%= recipe.recipeId %>" class="template-form">
+      <label for="articleTemplate">文章模板</label>
+      <select id="articleTemplate" name="template">
+        <% for (const template of templates) { %><option value="<%= template.id %>" <%= template.id === selectedTemplate.id ? 'selected' : '' %>><%= template.name %></option><% } %>
+      </select>
+      <button class="button ghost" type="submit">切换预览</button>
+    </form>
+    <p class="hint template-description"><%= selectedTemplate.description %></p>
+    <% if (record && record.status === 'draft' && selectedTemplate.id !== record.template_id) { %>
+      <p class="hint">公众号草稿仍是「<%= templateName(record.template_id) %>」。当前只是预览，点「更新这篇草稿」后才会替换。</p>
+    <% } %>
+    <p class="muted">日期：<%= clock.date %></p>
+    <% const busy = record && ['preparing', 'submitting', 'publishing'].includes(record.status) %>
+    <% const draft = record && record.status === 'draft' %>
+    <% const confirmText = publishedBefore ? '这道菜已经发表过，确定要再发一篇吗？' : (draft ? '确认发表这篇草稿？' : '确认立即发表这道菜？') %>
+    <% if (record) { %>
+      <p class="status"><%= statusLabel(record.status) %></p>
+      <% if (record.last_error) { %><div class="alert error"><%= record.last_error %></div><% } %>
+      <% if (record.article_url) { %><p><a href="<%= record.article_url %>" target="_blank" rel="noopener noreferrer">打开已发表文章 ↗</a></p><% } %>
+    <% } %>
+    <% if (publishedBefore) { %><div class="alert warning">这道菜已经发表过。手动可以再发一篇，提交前需要确认；今天发多少篇都不限制。</div><% } else if (todayOthers) { %><p class="hint">今天已经有其他文章，这道菜仍可以手动发表。</p><% } %>
+    <% if (!configured) { %><div class="alert warning">先配置 .env 中的公众号凭据才能创建草稿。</div><% } %>
+    <% if (record && record.status === 'needs_review') { %><p class="hint">这条记录需要先核对。若公众号后台没有对应文章，可到发表记录里解除占用后再发。</p><% } %>
+    <% if (draft && configured) { %>
+      <form method="post" action="/publish/<%= recipe.recipeId %>" data-wechat data-article data-loading="正在提交发表，请稍候…" onsubmit="return confirm('<%= confirmText %>')"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="templateId" value="<%= selectedTemplate.id %>"><input type="hidden" name="republish" value="<%= publishedBefore ? '1' : '0' %>"><%- include('partials/article-fields') %><button class="button primary full" type="submit">发表这篇草稿</button></form>
+      <form method="post" action="/drafts/<%= record.id %>/update" data-wechat data-article data-loading="正在更新公众号草稿，请稍候…" onsubmit="return confirm('确定用当前内容替换公众号里的这篇草稿？')"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="templateId" value="<%= selectedTemplate.id %>"><%- include('partials/article-fields') %><button class="button secondary full" type="submit">更新这篇草稿</button></form>
+      <form method="post" action="/drafts/<%= record.id %>/delete" data-wechat data-loading="正在删除草稿，请稍候…" onsubmit="return confirm('确定删除公众号里的这篇草稿？删除后可以重新生成。')"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="back" value="recipe"><input type="hidden" name="recipeId" value="<%= recipe.recipeId %>"><button class="button danger full" type="submit">删除这篇草稿</button></form>
+    <% } else if (!busy && record?.status !== 'needs_review' && configured) { %>
+      <form method="post" action="/draft/<%= recipe.recipeId %>" data-wechat data-article data-loading="正在存入公众号草稿，请稍候…"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="templateId" value="<%= selectedTemplate.id %>"><%- include('partials/article-fields') %><button class="button secondary full" type="submit">存入公众号草稿</button></form>
+      <form method="post" action="/publish/<%= recipe.recipeId %>" data-wechat data-article data-loading="正在提交发表，请稍候…" onsubmit="return confirm('<%= confirmText %>')"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="templateId" value="<%= selectedTemplate.id %>"><input type="hidden" name="republish" value="<%= publishedBefore ? '1' : '0' %>"><%- include('partials/article-fields') %><button class="button primary full" type="submit">立即发表</button></form>
+    <% } else if (busy) { %><p class="hint">这道菜有一篇文章正在处理，请到发表记录查询状态。</p><% } %>
+    <% if (record && record.publish_id && record.status !== 'published') { %>
+      <form method="post" action="/refresh/<%= record.id %>" data-wechat data-loading="正在查询微信状态，请稍候…"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="button ghost full" type="submit">查询微信发表状态</button></form>
+    <% } %>
+    <p class="hint">已存草稿可以更换模板后点「更新这篇草稿」，也可以删除后重新生成。正式发布时，小程序码会先上传微信素材，再写入文章。</p>
+  </aside>
+</div>
+<%- include('partials/footer') %>

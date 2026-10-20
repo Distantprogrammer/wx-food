@@ -1,0 +1,94 @@
+<%- include('partials/header', { title: '工作台' }) %>
+<section class="hero">
+  <div>
+    <p class="eyebrow">每日一篇 · 自动发表</p>
+    <h1>今天发哪道菜？</h1>
+    <p>自动任务按菜品 ID 每天发一道还没有记录的菜。手动发表不限篇数，已经发过的也可以再发。</p>
+  </div>
+  <div class="hero-date"><span>北京时间</span><strong><%= clock.date %></strong><span><%= clock.time %></span></div>
+</section>
+<div class="stats">
+  <div><strong><%= total %></strong><span>可选菜品</span></div>
+  <div><strong><%= publishedCount %></strong><span>已发表菜品</span></div>
+  <div><strong><%= total - used %></strong><span>自动任务剩余</span></div>
+</div>
+<div class="grid two">
+  <section class="card">
+    <div class="card-head"><h2>自动发表</h2><span class="pill <%= settings.enabled ? 'green' : '' %>"><%= settings.enabled ? '已开启' : '已关闭' %></span></div>
+    <% if (!configured) { %><div class="alert warning">公众号凭据尚未配置。预览可用，草稿与发表需先填写 .env 并重启。</div><% } %>
+    <form method="post" action="/settings" class="settings-form">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <label class="check-line"><input type="checkbox" name="enabled" <%= settings.enabled ? 'checked' : '' %> <%= configured ? '' : 'disabled' %>> <span>每天自动发表</span></label>
+      <label for="publishHour">北京时间整点</label>
+      <select id="publishHour" name="publishHour">
+        <% for (let h = 0; h < 24; h++) { %><option value="<%= h %>" <%= h === settings.publish_hour ? 'selected' : '' %>><%= String(h).padStart(2, '0') %>:00</option><% } %>
+      </select>
+      <label for="defaultTemplate">自动发表模板</label>
+      <select id="defaultTemplate" name="templateId">
+        <% for (const template of templates) { %><option value="<%= template.id %>" <%= template.id === settings.template_id ? 'selected' : '' %>><%= template.name %></option><% } %>
+      </select>
+      <button class="button primary" type="submit">保存设置</button>
+    </form>
+    <p class="hint">默认模板用于自动发表，也作为新文章预览的初始模板。单篇可在预览页另选。电脑和本程序须在发表时间保持运行；当天稍晚启动会补发当天文章。</p>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>今日菜品</h2><span class="subtle"><%= clock.date %></span></div>
+    <p class="kicker"><%= overrideActive ? '已指定给自动任务' : '按 ID 顺序的下一道' %></p>
+    <% if (next) { %>
+      <h3>#<%= next.recipeId %> <%= next.title %></h3>
+      <a class="button ghost" href="/recipes/<%= next.recipeId %>">预览这道菜</a>
+    <% } else { %>
+      <h3>暂无可用菜品</h3>
+    <% } %>
+    <% if (todayRecords.length) { %>
+      <div class="today-list">
+        <p class="hint">今天已有 <%= todayRecords.length %> 篇记录，手动发表还可以继续。</p>
+        <% for (const row of todayRecords) { %>
+          <a class="record-line" href="/recipes/<%= row.recipe_id %>">
+            <span><strong>#<%= row.recipe_id %> <%= row.title %></strong><small><%= row.source === 'timer' ? '自动任务' : '手动发表' %></small></span>
+            <span class="pill <%= row.status === 'published' ? 'green' : '' %>"><%= statusLabel(row.status) %></span>
+          </a>
+        <% } %>
+      </div>
+    <% } %>
+    <% if (!timerToday && next) { %>
+      <form method="post" action="/today" class="stack-form" data-recipe-form>
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <label for="today-recipe">指定今天自动发表的菜品</label>
+        <div class="recipe-select" data-recipe-select>
+          <button id="today-recipe" type="button" class="recipe-select-trigger" data-trigger aria-expanded="false" aria-haspopup="listbox">
+            <span data-label>请选择菜品</span>
+            <span class="recipe-caret" aria-hidden="true"></span>
+          </button>
+          <div class="recipe-menu" data-menu hidden role="listbox">
+            <%- include('partials/recipe-options', { mode: 'field' }) %>
+          </div>
+          <input type="hidden" name="recipeId" value="">
+        </div>
+        <button class="button secondary" type="submit">指定今天</button>
+      </form>
+      <p class="hint">带「已发表」的菜不能交给自动任务。打开下方列表里的菜品后，可以手动再发。</p>
+    <% } else if (timerToday) { %>
+      <p class="hint">今天的自动发表已经开始，不能改指定菜品。手动发表不受影响。</p>
+    <% } %>
+  </section>
+</div>
+<section class="card">
+  <div class="card-head"><h2>选择菜品</h2><span class="subtle">可搜索，已发表的标在右侧</span></div>
+  <div class="recipe-select" data-recipe-select>
+    <button type="button" class="recipe-select-trigger" data-trigger aria-expanded="false" aria-haspopup="listbox">
+      <span data-label>请选择要预览的菜品</span>
+      <span class="recipe-caret" aria-hidden="true"></span>
+    </button>
+    <div class="recipe-menu" data-menu hidden role="listbox">
+      <%- include('partials/recipe-options', { mode: 'link' }) %>
+    </div>
+  </div>
+</section>
+<section class="card">
+  <div class="card-head"><h2>最近发表记录</h2><a href="/history">查看全部 ›</a></div>
+  <% if (!recent.length) { %><p class="empty">还没有文章记录。可以从上面的列表里选一道菜预览。</p><% } %>
+  <% for (const row of recent) { %><a class="record-line" href="/recipes/<%= row.recipe_id %>"><span><strong>#<%= row.recipe_id %> <%= row.title %></strong><small><%= row.publish_date %></small></span><span class="pill <%= row.status === 'published' ? 'green' : '' %>"><%= statusLabel(row.status) %></span></a><% } %>
+</section>
+<script src="/assets/picker.js"></script>
+<%- include('partials/footer') %>

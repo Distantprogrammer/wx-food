@@ -1,0 +1,16 @@
+{
+  "name": "today-food-official-publisher-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "今天做什么菜公众号文章管理网页",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": { "node": ">=22.13.0" },
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "ejs": "^3.0.0",
+    "express": "^5.0.0"
+  }
+}

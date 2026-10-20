@@ -1,0 +1,21 @@
+<div class="recipe-filter-wrap">
+  <input class="recipe-filter" data-filter type="search" placeholder="输入 ID 或菜名筛选" autocomplete="off" aria-label="筛选菜品">
+</div>
+<div class="recipe-options">
+  <% for (const recipe of recipes) { %>
+    <% const published = publishedIds.has(recipe.recipeId) %>
+    <% const label = `#${recipe.recipeId} ${recipe.title}` %>
+    <% if (mode === 'link') { %>
+      <a class="recipe-option" href="/recipes/<%= recipe.recipeId %>" data-id="<%= recipe.recipeId %>" data-title="<%= recipe.title %>" data-label="<%= label %>">
+        <span class="recipe-option-label"><%= label %></span>
+        <span class="recipe-option-mark"><% if (published) { %><span class="pill green">已发表</span><% } %></span>
+      </a>
+    <% } else { %>
+      <button type="button" class="recipe-option" data-id="<%= recipe.recipeId %>" data-title="<%= recipe.title %>" data-label="<%= label %>">
+        <span class="recipe-option-label"><%= label %></span>
+        <span class="recipe-option-mark"><% if (published) { %><span class="pill green">已发表</span><% } %></span>
+      </button>
+    <% } %>
+  <% } %>
+</div>
+<p class="recipe-none" data-empty hidden>没有匹配的菜品</p>

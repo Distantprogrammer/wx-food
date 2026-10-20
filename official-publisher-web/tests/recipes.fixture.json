@@ -1,0 +1,5 @@
+[
+  {"id":1,"title":"黄瓜皮蛋汤","category_slug":"soup","category_name":"汤类","difficulty":2,"calories":311,"summary":"家常汤","ingredients":["黄瓜","皮蛋"],"calculation_items":["黄瓜 1 根","皮蛋 2 个"],"steps":["切好食材","下锅煮熟"],"cover_image":"/download/recipe-images/missing.jpg"},
+  {"id":2,"title":"米粥","category_slug":"staple","category_name":"主食","difficulty":1,"calories":200,"ingredients":["米","水"],"steps":["洗米","煮熟"],"cover_image":"/download/recipe-images/missing2.jpg"},
+  {"id":3,"title":"示例菜","category_slug":"template","ingredients":["a"],"steps":["b"]}
+]
